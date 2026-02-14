@@ -140,6 +140,15 @@ function selectSubject(branch, subject) {
     event.target.classList.add('selected');
 }
 
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
 function generateArrangement() {
     if (selectedBranchCount === 0) {
         alert('⚠️ Please select how many branches are having the exam');
@@ -193,15 +202,26 @@ function generateArrangement() {
     
     const result = allocateSeatsToClassrooms(students, sections);
     
+    // Shuffle classroom assignments while keeping bench order same
+    const shuffledSections = shuffleArray(sections);
+    const classroomMapping = {};
+    sections.forEach((sec, idx) => {
+        classroomMapping[sec.name] = shuffledSections[idx].name;
+    });
+    
+    result.seated.forEach(seat => {
+        seat.classroom = classroomMapping[seat.classroom];
+    });
+    
     // Store data in localStorage (persists across pages)
     localStorage.setItem('seatingData', JSON.stringify(result.seated));
     localStorage.setItem('overflowData', JSON.stringify(result.overflow));
-    localStorage.setItem('sections', JSON.stringify(sections));
+    localStorage.setItem('sections', JSON.stringify(shuffledSections));
     
     // Also store in sessionStorage for backward compatibility
     sessionStorage.setItem('seatingData', JSON.stringify(result.seated));
     sessionStorage.setItem('overflowData', JSON.stringify(result.overflow));
-    sessionStorage.setItem('sections', JSON.stringify(sections));
+    sessionStorage.setItem('sections', JSON.stringify(shuffledSections));
     
     // Redirect to results page
     window.location.href = 'results.html';
