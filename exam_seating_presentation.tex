@@ -1,0 +1,170 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath} % For math equations if needed
+\usepackage{listings} % For code snippets
+\usepackage{fancyvrb} % For verbatim environment with tiny font
+
+\usetheme{Madrid} % Or any other theme you prefer
+\usecolortheme{beaver} % Or any other color theme
+
+	itle{Exam Seat Arrangement System}
+\author{Dhruthiya, Aasifa, Hasini, Sriya, Navya}
+\date{	oday}
+
+\begin{document}
+
+\begin{frame}
+    	itlepage
+\end{frame}
+
+\begin{frame}{2. Core Issue and Motivation}
+    \begin{itemize}
+        \item 	extbf{System Overview:} This presentation details an Exam Seating Arrangement System designed to automate student allocation for examinations. It manages academic branches, subjects, and ensures fair seating, handling both primary and overflow arrangements through a JavaScript-based logic.
+        \item 	extbf{Core Issue:} Manual exam seating arrangement is time-consuming, prone to errors, and difficult to ensure fair distribution (e.g., preventing students from the same branch sitting together).
+        \item 	extbf{Our Approach Goal:} To automate the process of creating exam seating arrangements, ensuring optimal student distribution and adherence to specific rules (e.g., no same-branch bench partners), through a user-friendly web interface.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{3. Problem Statement and Constraints}
+    \begin{itemize}
+        \item 	extbf{Problem Statement:} Develop a system that can efficiently take student data (Roll Number, Name, Class, Branch) and available classroom information, then generate an exam seating arrangement where students from the same branch are not seated together at the same bench.
+        \item 	extbf{Constraints:}
+            \begin{itemize}
+                \item The system should be a simple web application.
+                \item Should be able to handle a reasonable number of students (e.g., up to 1000).
+                \item Arrangement generation should be fast (e.g., < 2 seconds for 500 students).
+                \item Output must be displayable in a table and downloadable (PDF, Excel).
+                \item Minimal infrastructure requirements (client-side processing preferred).
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{4. Workflow: Seating Arrangement Generation}
+    \begin{enumerate}
+        \item 	extbf{User Input \& Selection Phase:}
+            \begin{itemize}
+                \item User selects number of branches for exam (	exttt{selectedBranchCount}).
+                \item User selects specific academic branches (	exttt{selectedBranches}).
+                \item User selects one subject per chosen branch (	exttt{selectedSubjects}).
+                \item Input validation ensures all necessary selections are made.
+            \end{itemize}
+        \item 	extbf{Processing Phase (	exttt{generateArrangement()}):}
+            \begin{itemize}
+                \item 	extbf{Roll Number Generation:} Simulated roll numbers created for all students.
+                \item 	extbf{Main Seating Allocation:} Students distributed to primary classrooms (	exttt{allocateSeatsToClassrooms()}).
+                \item 	extbf{Overflow Handling:} Remaining students allocated to additional classrooms (	exttt{allocateOverflowSeats()}).
+            \end{itemize}
+        \item 	extbf{Output Phase:}
+            \begin{itemize}
+                \item Seating data (	exttt{seatingData}, 	exttt{overflowData}) stored locally.
+                \item Redirect to results page for display.
+                \item Options to download as PDF or Excel.
+            \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{5. System Overview}
+    \begin{itemize}
+        \item 	extbf{Architecture:} Primarily a client-side single-page web application.
+        \item 	extbf{Frontend:} HTML5, CSS3, Vanilla JavaScript.
+        \item 	extbf{Data Management:} Relies on static `branchData` and dynamic state variables for selections.
+        \item 	extbf{Libraries:}
+            \begin{itemize}
+                \item 	exttt{jsPDF}: For generating PDF output.
+                \item 	exttt{SheetJS (xlsx)}: For parsing CSV input and exporting Excel.
+            \end{itemize}
+        \item 	extbf{Backend (Optional/Future):} Node.js with Express.js if larger datasets or persistent storage are required.
+        \item 	extbf{Database (Optional/Future):} MongoDB or PostgreSQL for saving arrangements.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{5.5. Key Data Structures}
+    \begin{itemize}
+        \item 	extbf{	exttt{branchData}: Static Academic Information}
+        \begin{itemize}
+            \item Defines branches (e.g., CSE, ECE), their sections, student counts per section, and subjects offered.
+            \item Example (Conceptual):
+            \begin{tiny}
+            \begin{Verbatim}[commandchars=\{\}]
+const branchData = {
+    CSE: { sections: ['CSE-A', ...], students: [64, ...], subjects: ['Matrices', ...] },
+    ECE: { sections: ['ECE-A', ...], students: [64, ...], subjects: ['Physics', ...] }
+};
+            \end{Verbatim}
+            \end{tiny}
+        \end{itemize}
+        \item 	extbf{Dynamic State Variables: User Selections}
+        \begin{itemize}
+            \item 	exttt{selectedBranchCount}: Number of branches chosen for the exam.
+            \item 	exttt{selectedBranches}: Set of currently selected branch names.
+            \item 	exttt{selectedSubjects}: Map of branch to chosen subject (e.g., \{ "CSE": "Matrices and calculus" \}).
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{6. Logic: Seat Arrangement Strategy}
+    \begin{itemize}
+        \item 	extbf{Main Seating Allocation (	exttt{allocateSeatsToClassrooms()})}
+        \begin{itemize}
+            \item 	extbf{Pass 1 (Seat 1):}
+            \begin{itemize}
+                \item Fill one side of benches sequentially across classrooms.
+                \item Select students *not* from the same section as the current classroom.
+                \item Mark student as 'seated' to prevent duplicates.
+            \end{itemize}
+            \item 	extbf{Pass 2 (Seat 2):}
+            \begin{itemize}
+                \item For each `seat1`, find a `seat2` student.
+                \item `seat2` must be from a *different branch* and *different subject* than `seat1`.
+                \item Mark student as 'seated'.
+            \end{itemize}
+            \item Students unseated after Pass 2 are designated 'overflow'.
+        \end{itemize}
+        \item 	extbf{Overflow Handling (	exttt{allocateOverflowSeats()})}
+        \begin{itemize}
+            \item Remaining students are arranged into conceptual 'overflow' classrooms.
+            \item Attempts to pair students on benches, prioritizing different subjects.
+            \item Calculates number of additional classrooms needed.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{6.5. Output Data Structures}
+    \begin{itemize}
+        \item 	extbf{	exttt{seatingData}: Main Classroom Allocation}
+        \begin{itemize}
+            \item An array of objects, each representing a bench in a primary classroom.
+            \item Fields include: `classroom` (e.g., "CSE-A"), `bench` (number), `seat1` (object with `rollNo`, `section`, `subject`), `seat2` (similar object, or `null`).
+            \item Example: `{ classroom: "CSE-A", bench: 1, seat1: {...}, seat2: {...} }`
+        \end{itemize}
+        \item 	extbf{	exttt{overflowData}: Unseated Student Records}
+        \begin{itemize}
+            \item Initially, an array of student objects not placed in main classrooms.
+            \item Each student object includes: `rollNo`, `name`, `section`, `subject`.
+            \item After processing, conceptually arranged into 'Overflow-Class-X' with bench assignments.
+            \item Example (Student object): `{ rollNo: "25wh1a0565", section: "CSE-B", subject: "Programming" }`
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{7. Takeaway Lessons}
+    \begin{itemize}
+        \item 	extbf{Simplicity:} Complex problems can often be solved effectively with simple, client-side solutions, reducing infrastructure overhead.
+        \item 	extbf{Algorithm Design:} The core logic (seat allocation algorithm) is crucial for meeting key requirements (e.g., no same-branch partners). Careful design and testing are vital.
+        \item 	extbf{User Experience:} Providing clear input mechanisms (form/CSV) and flexible output options (table display, PDF, Excel) significantly enhances usability.
+        \item 	extbf{Phased Development:} Breaking down the project into logical phases (Algorithm, UI, File Handling, Testing) helps manage complexity and ensures steady progress.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{8. Challenges Faced}
+    \begin{itemize}
+        \item 	extbf{Algorithm Edge Cases:} Ensuring the seating algorithm robustly handles scenarios like an uneven number of students per branch, or when only one branch remains.
+        \item 	extbf{Performance Optimization:} Maintaining fast generation times for increasing numbers of students, especially with client-side processing.
+        \item 	extbf{UI/UX Responsiveness:} Creating an intuitive and responsive user interface that works well across different devices and handles input/output gracefully.
+        	extbf{Cross-Browser Compatibility:} Ensuring the application and integrated libraries (jsPDF, SheetJS) function correctly across various web browsers.
+        \item 	extbf{Data Validation:} Implementing thorough client-side validation to prevent incorrect inputs from breaking the allocation logic.
+    \end{itemize}
+\end{frame}
+
+\end{document}

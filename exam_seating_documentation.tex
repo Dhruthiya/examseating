@@ -1,0 +1,181 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{longtable}
+\usepackage[table]{xcolor} % For table colors
+\usepackage{array} % For p{} column type with longtable
+
+% Title and Author
+	itle{Exam Seating Arrangement System Documentation}
+\author{Gemini CLI}
+\date{	oday}
+
+\begin{document}
+\maketitle
+	ableofcontents
+
+ewpage
+
+\section{Introduction}
+This document provides a technical overview and workflow description of an Exam Seating Arrangement System. The system is designed to automate the allocation of students to classrooms for examinations, managing different academic branches, subjects, and ensuring fair seating distribution. It handles both primary seating arrangements and overflow scenarios, generating structured data that can be used for display and reporting. The core logic is implemented in JavaScript, operating on predefined branch and student data.
+
+\section{System Architecture and Data Structures}
+The system's functionality heavily relies on well-defined data structures to manage academic information and user selections.
+
+\subsection{Core Data: 	exttt{branchData}}
+The primary static data source is the 	exttt{branchData} object. This JavaScript object (conceptually represented here) holds comprehensive information for each academic branch involved in the examinations.
+\begin{verbatim}
+const branchData = {
+    CSE: {
+        sections: ['CSE-A', 'CSE-B', ..., 'CSE-F'],
+        students: [64, 64, ..., 64], // Students per section
+        subjects: ['Matrices and calculus', ..., 'Electronic Engineering']
+    },
+    ECE: {
+        sections: ['ECE-A', 'ECE-B'],
+        students: [64, 64],
+        subjects: ['Matrices and calculus', ..., 'Electrical Engineering']
+    },
+    AIML: { /* ... */ },
+    EEE: { /* ... */ }
+};
+\end{verbatim}
+Each entry under a branch (e.g., 	exttt{CSE}) contains:
+\begin{itemize}
+    \item 	exttt{sections}: An array of strings, listing the distinct sections within that branch.
+    \item 	exttt{students}: An array of numbers, where each number corresponds to the student count for the respective section in the 	exttt{sections} array.
+    \item 	exttt{subjects}: An array of strings, listing the subjects offered to students of that branch in the current examination session.
+\end{itemize}
+
+\subsection{State Variables}
+The system maintains several state variables to track user interactions and selections:
+\begin{itemize}
+    \item 	exttt{selectedBranchCount}: A number indicating how many distinct branches the user intends to select for the examination.
+    \item 	exttt{selectedBranches}: A JavaScript 	exttt{Set} containing the names of the branches currently selected by the user. This ensures uniqueness and efficient lookup.
+    \item 	exttt{selectedSubjects}: An object mapping selected branch names to their chosen subject for the examination. For example, 	exttt{\{ "CSE": "Matrices and calculus", "ECE": "Advanced Engineering Physics" \}}.
+\end{itemize}
+
+\section{Workflow of Seating Arrangement Generation}
+The generation of the exam seating arrangement follows a structured workflow, initiated by user input and culminating in the allocation of students to specific seats. This process ensures a systematic and fair distribution based on predefined rules.
+
+\subsection{User Input and Selection}
+The workflow begins with the user defining the parameters for the examination:
+\begin{enumerate}
+    \item 	extbf{Select Number of Branches}: The user specifies the total number of distinct branches participating in the examination (	exttt{selectedBranchCount}).
+    \item 	extbf{Select Branches}: From the available academic branches (e.g., CSE, ECE, AIML, EEE), the user selects a specific set of branches, adhering to the previously set count (	exttt{selectedBranches}).
+    \item 	extbf{Select Subjects}: For each selected branch, the user then chooses one specific subject that students from that branch will be taking (	exttt{selectedSubjects}).
+\end{enumerate}
+Input validation checks are performed at each step to ensure that the selections are complete and adhere to the system's constraints (e.g., selecting the correct number of branches and a subject for each).
+
+\subsection{Arrangement Generation Process}
+Upon successful validation of user inputs, the 	exttt{generateArrangement()} function orchestrates the seating allocation through several distinct phases:
+
+\subsubsection{Roll Number Generation}
+Before allocation, a comprehensive list of student roll numbers is generated for each selected branch using the 	exttt{generateRollNumbers(branch)} function. This function creates simulated roll numbers following specific patterns (e.g., "25wh1a0501" for CSE) and ensures that all students from the selected sections within each branch are accounted for. The roll numbers serve as unique identifiers for each student in the system.
+
+\subsubsection{Main Seating Allocation: 	exttt{allocateSeatsToClassrooms()}}
+This is the core of the seating algorithm, designed to distribute students across available classrooms and benches while maintaining certain conditions. It operates in two main passes:
+\begin{enumerate}
+    \item 	extbf{Pass 1: Filling Seat 1 (	exttt{seat1})}
+    \begin{itemize}
+        \item Each classroom's benches are sequentially filled with a student in 	exttt{seat1}.
+        \item Students are selected such that they are not from the same section as the current classroom, ensuring a mix across sections.
+        \item Once a student is assigned, their roll number is marked as 'seated' to prevent duplicate assignments.
+        \item This pass aims to populate one side of each bench in the primary classrooms.
+    \end{itemize}
+    \item 	extbf{Pass 2: Filling Seat 2 (	exttt{seat2})}
+    \begin{itemize}
+        \item For each bench that has a student in 	exttt{seat1}, the system attempts to find a suitable student for 	exttt{seat2}.
+        \item The criteria for 	exttt{seat2} are stricter: the student must be from a different branch than the student in 	exttt{seat1}, and also taking a different subject. This prevents direct collaboration.
+        \item As in Pass 1, assigned students are marked 'seated'.
+        \item This pass ensures that benches are optimally utilized with diverse student combinations.
+    \end{itemize}
+Students who cannot be seated after these two passes are designated as 'overflow' students.
+
+\subsubsection{Overflow Handling: 	exttt{allocateOverflowSeats()}}
+Any students remaining after the main seating allocation (i.e., those not marked 'seated') are processed by the 	exttt{allocateOverflowSeats()} function.
+\begin{itemize}
+    \item These students are arranged into additional, 'overflow' classrooms.
+    \item The allocation attempts to pair students on benches, prioritizing different subjects if possible, similar to the main allocation, but within the context of supplementary classrooms.
+    \item The number of additional classrooms required is calculated based on the total number of overflow students.
+\end{itemize}
+
+The results of both main and overflow seating allocations (i.e., 	exttt{seatingData} and 	exttt{overflowData}) are then stored temporarily for display and download.
+
+\section{Example Output Structures}
+The system's primary output consists of two main data structures: 	exttt{seatingData} for students successfully allocated to primary classrooms and 	exttt{overflowData} for students requiring additional arrangements. These structures are arrays of objects, with each object representing a specific seating record.
+
+\subsection{Seated Students Data (	exttt{seatingData})}
+The 	exttt{seatingData} array contains records for each student seated in the primary classrooms. Each record is an object with the following conceptual structure:
+\begin{verbatim}
+[
+    {
+        classroom: "CSE-A",
+        bench: 1,
+        seat1: {
+            rollNo: "25wh1a0501",
+            name: "25wh1a0501",
+            section: "CSE-A",
+            subject: "Matrices and calculus"
+        },
+        seat2: {
+            rollNo: "25wh1a5501",
+            name: "25wh1a5501",
+            section: "ECE-A",
+            subject: "Advanced Engineering Physics"
+        }
+    },
+    // ... more seating records
+]
+\end{verbatim}
+A conceptual representation in a table might look like this:
+\begin{longtable}{|p{2cm}|p{1.5cm}|p{2.5cm}|p{2cm}|p{2.5cm}|p{2cm}|}
+    \hline
+    owcolor{lightgray} 	extbf{Classroom} & 	extbf{Bench} & 	extbf{Seat 1 Roll No} & 	extbf{Seat 1 Section} & 	extbf{Seat 2 Roll No} & 	extbf{Seat 2 Section} 
+    \hline
+    \endhead
+    CSE-A & 1 & 25wh1a0501 & CSE-A & 25wh1a5501 & ECE-A 
+    CSE-A & 2 & 25wh1a0502 & CSE-A & 25wh1a6601 & AIML-A 
+    ECE-B & 1 & 25wh1a0503 & CSE-A & 25wh1a4401 & EEE-A 
+    \hline
+\end{longtable}
+
+\subsection{Overflow Students Data (	exttt{overflowData})}
+The 	exttt{overflowData} array contains records for students who could not be accommodated in the primary seating arrangement and require additional classrooms. Each record in the raw 	exttt{overflowData} array is conceptually a student object:
+\begin{verbatim}
+[
+    {
+        rollNo: "25wh1a0565",
+        name: "25wh1a0565",
+        section: "CSE-B",
+        subject: "Programming for Problem solving"
+    },
+    {
+        rollNo: "25wh1a5565",
+        name: "25wh1a5565",
+        section: "ECE-B",
+        subject: "Matrices and calculus"
+    }
+    // ... more overflow student records
+]
+\end{verbatim}
+When processed by 	exttt{allocateOverflowSeats()}, these are then organized into conceptual overflow classrooms. A conceptual table for the 	extit{allocated} overflow might resemble:
+\begin{longtable}{|p{2cm}|p{1.5cm}|p{2.5cm}|p{2cm}|p{2.5cm}|p{2cm}|}
+    \hline
+    owcolor{lightgray} 	extbf{Classroom} & 	extbf{Bench} & 	extbf{Seat 1 Roll No} & 	extbf{Seat 1 Section} & 	extbf{Seat 2 Roll No} & 	extbf{Seat 2 Section} 
+    \hline
+    \endhead
+    Overflow-Class-1 & 1 & 25wh1a0565 & CSE-B & 25wh1a5565 & ECE-B 
+    Overflow-Class-1 & 2 & 25wh1a0566 & CSE-B & - & - 
+    \hline
+\end{longtable}
+
+\section{Conclusion}
+This document has detailed the architecture, data structures, and workflow of the Exam Seating Arrangement System. By understanding its components, from initial user selection to the final two-pass allocation algorithm and overflow handling, the system's robust approach to generating fair and efficient seating plans is evident. The provided conceptual data structures and workflow descriptions serve to clarify the system's operational logic.
+
+\end{document}
