@@ -149,7 +149,7 @@ function shuffleArray(array) {
     return shuffled;
 }
 
-function generateArrangement() {
+function generateArrangement(enableShuffle = false) {
     if (selectedBranchCount === 0) {
         alert('⚠️ Please select how many branches are having the exam');
         return;
@@ -175,7 +175,6 @@ function generateArrangement() {
     const sections = [];
     const students = [];
     
-    // Process branches in fixed order: CSE, ECE, AIML, EEE
     const branchOrder = ['CSE', 'ECE', 'AIML', 'EEE'];
     
     branchOrder.forEach(branch => {
@@ -202,28 +201,30 @@ function generateArrangement() {
     
     const result = allocateSeatsToClassrooms(students, sections);
     
-    // Shuffle classroom assignments while keeping bench order same
-    const shuffledSections = shuffleArray(sections);
-    const classroomMapping = {};
-    sections.forEach((sec, idx) => {
-        classroomMapping[sec.name] = shuffledSections[idx].name;
-    });
+    let finalSections = sections;
     
-    result.seated.forEach(seat => {
-        seat.classroom = classroomMapping[seat.classroom];
-    });
+    if (enableShuffle) {
+        const shuffledSections = shuffleArray(sections);
+        const classroomMapping = {};
+        sections.forEach((sec, idx) => {
+            classroomMapping[sec.name] = shuffledSections[idx].name;
+        });
+        
+        result.seated.forEach(seat => {
+            seat.classroom = classroomMapping[seat.classroom];
+        });
+        
+        finalSections = shuffledSections;
+    }
     
-    // Store data in localStorage (persists across pages)
     localStorage.setItem('seatingData', JSON.stringify(result.seated));
     localStorage.setItem('overflowData', JSON.stringify(result.overflow));
-    localStorage.setItem('sections', JSON.stringify(shuffledSections));
+    localStorage.setItem('sections', JSON.stringify(finalSections));
     
-    // Also store in sessionStorage for backward compatibility
     sessionStorage.setItem('seatingData', JSON.stringify(result.seated));
     sessionStorage.setItem('overflowData', JSON.stringify(result.overflow));
-    sessionStorage.setItem('sections', JSON.stringify(shuffledSections));
+    sessionStorage.setItem('sections', JSON.stringify(finalSections));
     
-    // Redirect to results page
     window.location.href = 'results.html';
 }
 
