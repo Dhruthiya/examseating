@@ -16,6 +16,39 @@
             min-height: 100vh;
         }
         
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .user-info img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+        
+        .logout-btn {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .logout-btn:hover {
+            background: #b71c1c;
+        }
+        
         .container { 
             max-width: 1400px;
             margin: 0 auto;
@@ -390,6 +423,12 @@
     </style>
 </head>
 <body>
+    <div class="user-info" id="userInfo" style="display: none;">
+        <img id="userPicture" src="" alt="User">
+        <span id="userName"></span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    
     <div class="container">
         <h1>Exam Seating Arrangement System</h1>
         <p class="subtitle">Automated seating allocation with intelligent branch pairing</p>
@@ -439,6 +478,42 @@
     <script>
         const API_URL = 'http://localhost:5000/api';
         let subjectCounter = 0;
+
+        // Check authentication on page load
+        async function checkAuth() {
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/user', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    window.location.href = '../login.html';
+                    return;
+                }
+                
+                const user = await response.json();
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userPicture').src = user.picture;
+                document.getElementById('userInfo').style.display = 'flex';
+            } catch (error) {
+                window.location.href = '../login.html';
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch('http://localhost:5000/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                window.location.href = '../login.html';
+            } catch (error) {
+                console.error('Logout failed:', error);
+            }
+        }
+
+        // Run auth check on page load
+        checkAuth();
         let allSections = [];
         let allSubjects = [];
 
