@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Exam Seat Arrangement System</title>
+    <link rel="stylesheet" href="home.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div class="home-container">
+        <div class="home-box">
+            <div class="home-header">
+                <h1>🎓</h1>
+                <h2>Exam Seat Arrangement System</h2>
+                <p>Please login to continue</p>
+            </div>
+            
+            <!-- Google Sign-In (Admin) -->
+            <div style="margin: 20px 0;">
+                <div id="g_id_onload"
+                     data-client_id="80284631535-bf0igbecrqsfgsbkiqe77plh0jtuhdok.apps.googleusercontent.com"
+                     data-callback="handleGoogleLogin">
+                </div>
+                <div class="g_id_signin" 
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="sign_in_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left"
+                     style="display: flex; justify-content: center;">
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 20px 0; color: #666;">OR</div>
+
+            <!-- Traditional Login (Student) -->
+            <form id="studentLoginForm" style="width: 100%;">
+                <input type="text" id="rollNumber" placeholder="Enter Roll Number" required 
+                       style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
+                <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                    Student Login
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="login.js"></script>
+</body>
+</html>

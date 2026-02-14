@@ -1,0 +1,125 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.home-container {
+    width: 100%;
+    max-width: 700px;
+}
+
+.home-box {
+    background: white;
+    padding: 50px 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.home-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.home-header h1 {
+    font-size: 4em;
+    margin-bottom: 10px;
+}
+
+.home-header h2 {
+    color: #2d3748;
+    font-size: 1.8em;
+    font-weight: 700;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.home-header p {
+    color: #718096;
+    font-size: 1.1em;
+}
+
+.role-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.role-btn {
+    background: white;
+    border: 3px solid #e2e8f0;
+    padding: 40px 20px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.role-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.admin-btn:hover {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.admin-btn:hover .role-icon,
+.admin-btn:hover .role-title,
+.admin-btn:hover .role-desc {
+    color: white;
+}
+
+.student-btn:hover {
+    border-color: #11998e;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.student-btn:hover .role-icon,
+.student-btn:hover .role-title,
+.student-btn:hover .role-desc {
+    color: white;
+}
+
+.role-icon {
+    font-size: 4em;
+    margin-bottom: 15px;
+}
+
+.role-title {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 10px;
+}
+
+.role-desc {
+    font-size: 0.95em;
+    color: #718096;
+}

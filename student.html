@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student - Search Your Seat</title>
+    <link rel="stylesheet" href="student.css">
+</head>
+<body>
+    <div class="student-container">
+        <div class="student-box">
+            <button class="back-btn" onclick="logout()">🚪 Logout</button>
+            
+            <div class="student-header">
+                <h1>🔍</h1>
+                <h2>Search Your Seating</h2>
+                <p>Enter the last 4 digits of your roll number</p>
+            </div>
+            
+            <div class="search-section">
+                <input type="text" id="searchInput" placeholder="e.g., 0501 or 05a1" maxlength="4">
+                <button onclick="searchSeat()">Search</button>
+            </div>
+            
+            <div id="resultSection" class="result-section" style="display: none;">
+                <div class="result-card">
+                    <h3>📋 Your Seat Details</h3>
+                    <div class="result-info">
+                        <div class="info-row">
+                            <span class="label">Roll Number:</span>
+                            <span class="value" id="rollNumber"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Section:</span>
+                            <span class="value" id="section"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Classroom:</span>
+                            <span class="value" id="classroom"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Bench Number:</span>
+                            <span class="value" id="benchNumber"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Bench Partner:</span>
+                            <span class="value" id="benchPartner"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script src="student.js"></script>
+    <script>
+        if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'student') {
+            window.location.href = 'home.html';
+        }
+        
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'home.html';
+        }
+    </script>
+</body>
+</html>

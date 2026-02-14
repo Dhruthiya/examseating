@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seating Arrangement Results</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 style="margin-bottom: 0;">📋 Seating Arrangement Results</h1>
+            <div>
+                <button onclick="window.location.href='index.html'" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 10px 20px; font-size: 14px; margin-right: 10px;">🔙 Back</button>
+                <button onclick="logout()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 10px 20px; font-size: 14px;">🚪 Logout</button>
+            </div>
+        </div>
+        
+        <div class="download-buttons">
+            <button onclick="downloadPDF()">📄 Download PDF</button>
+            <button onclick="downloadExcel()">📊 Download Excel</button>
+        </div>
+        
+        <div id="tableContainer"></div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="results.js"></script>
+    <script>
+        if (!sessionStorage.getItem('isLoggedIn')) {
+            window.location.href = 'login.html';
+        }
+        
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('seatingData');
+            sessionStorage.removeItem('overflowData');
+            window.location.href = 'home.html';
+        }
+    </script>
+</body>
+</html>
