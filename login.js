@@ -2,11 +2,6 @@
 function handleGoogleLogin(response) {
     const userInfo = parseJwt(response.credential);
     
-    if (!userInfo.email.endsWith('@bvrithyderabad.edu.in')) {
-        alert('❌ Only @bvrithyderabad.edu.in emails are allowed!');
-        return;
-    }
-    
     sessionStorage.setItem('isLoggedIn', 'true');
     sessionStorage.setItem('userEmail', userInfo.email);
     sessionStorage.setItem('userName', userInfo.name);
