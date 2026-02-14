@@ -34,7 +34,8 @@ function searchSeat() {
                 seat.seat1.section,
                 seat.classroom,
                 seat.bench,
-                seat.seat2 ? `${seat.seat2.rollNo} (${seat.seat2.section})` : 'No partner'
+                seat.seat2 ? `${seat.seat2.rollNo} (${seat.seat2.section})` : 'No partner',
+                seat.seat1.subject
             );
             found = true;
             break;
@@ -46,7 +47,8 @@ function searchSeat() {
                 seat.seat2.section,
                 seat.classroom,
                 seat.bench,
-                `${seat.seat1.rollNo} (${seat.seat1.section})`
+                `${seat.seat1.rollNo} (${seat.seat1.section})`,
+                seat.seat2.subject
             );
             found = true;
             break;
@@ -66,7 +68,8 @@ function searchSeat() {
                     seat.seat1.section,
                     `Overflow-Class-${seat.classroom}`,
                     seat.bench,
-                    seat.seat2 ? `${seat.seat2.rollNo} (${seat.seat2.section})` : 'No partner'
+                    seat.seat2 ? `${seat.seat2.rollNo} (${seat.seat2.section})` : 'No partner',
+                    seat.seat1.subject
                 );
                 found = true;
                 break;
@@ -78,7 +81,8 @@ function searchSeat() {
                     seat.seat2.section,
                     `Overflow-Class-${seat.classroom}`,
                     seat.bench,
-                    `${seat.seat1.rollNo} (${seat.seat1.section})`
+                    `${seat.seat1.rollNo} (${seat.seat1.section})`,
+                    seat.seat2.subject
                 );
                 found = true;
                 break;
@@ -127,12 +131,17 @@ function allocateOverflowSeats(students) {
     return result;
 }
 
-function displayResult(rollNo, section, classroom, bench, partner) {
-    document.getElementById('rollNumber').textContent = rollNo;
-    document.getElementById('section').textContent = section;
+function displayResult(rollNo, section, classroom, bench, partner, subject) {
+    // Calculate row and column based on bench number
+    const column = Math.ceil(bench / 8);
+    const row = ((bench - 1) % 8) + 1;
+    
+    document.getElementById('subject').textContent = subject;
+    document.getElementById('examDate').textContent = localStorage.getItem('examDate') || 'Not set';
+    document.getElementById('examTime').textContent = localStorage.getItem('examTime') || 'Not set';
     document.getElementById('classroom').textContent = classroom;
-    document.getElementById('benchNumber').textContent = bench;
-    document.getElementById('benchPartner').textContent = partner;
+    document.getElementById('column').textContent = column;
+    document.getElementById('row').textContent = row;
     
     document.getElementById('resultSection').style.display = 'block';
 }

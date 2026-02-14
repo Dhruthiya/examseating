@@ -11,14 +11,14 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h1 style="margin-bottom: 0;">📋 Seating Arrangement Results</h1>
             <div>
-                <button onclick="window.location.href='index.html'" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 10px 20px; font-size: 14px; margin-right: 10px;">🔙 Back</button>
-                <button onclick="logout()" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 10px 20px; font-size: 14px;">🚪 Logout</button>
+                <button onclick="window.location.href='index.html'" style="background: #4a90e2; padding: 10px 20px; font-size: 14px; margin-right: 10px;">🔙 Back</button>
+                <button onclick="logout()" style="background: #dc3545; padding: 10px 20px; font-size: 14px;">🚪 Logout</button>
             </div>
         </div>
         
         <div class="download-buttons">
-            <button onclick="downloadPDF()">📄 Download PDF</button>
-            <button onclick="downloadExcel()">📊 Download Excel</button>
+            <button onclick="saveData()" style="background: #28a745;">💾 Save Data</button>
+            <button onclick="shuffleArrangement()" style="background: #6c757d;">🔀 Shuffle</button>
         </div>
         
         <div id="tableContainer"></div>

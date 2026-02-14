@@ -16,7 +16,20 @@
                 <p>Please login to continue</p>
             </div>
             
-            <!-- Google Sign-In (Admin) -->
+            <!-- Traditional Login -->
+            <form id="studentLoginForm" style="width: 100%;">
+                <input type="email" id="email" placeholder="Email" required 
+                       style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
+                <input type="password" id="password" placeholder="Password" required 
+                       style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
+                <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                    Login
+                </button>
+            </form>
+
+            <div style="text-align: center; margin: 20px 0; color: #666;">OR</div>
+
+            <!-- Google Sign-In -->
             <div style="margin: 20px 0;">
                 <div id="g_id_onload"
                      data-client_id="80284631535-bf0igbecrqsfgsbkiqe77plh0jtuhdok.apps.googleusercontent.com"
@@ -32,17 +45,6 @@
                      style="display: flex; justify-content: center;">
                 </div>
             </div>
-
-            <div style="text-align: center; margin: 20px 0; color: #666;">OR</div>
-
-            <!-- Traditional Login (Student) -->
-            <form id="studentLoginForm" style="width: 100%;">
-                <input type="text" id="rollNumber" placeholder="Enter Roll Number" required 
-                       style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
-                <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
-                    Student Login
-                </button>
-            </form>
         </div>
     </div>
     

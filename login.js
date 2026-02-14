@@ -1,4 +1,4 @@
-// Google Sign-In callback (Admin)
+// Google Sign-In callback
 function handleGoogleLogin(response) {
     const userInfo = parseJwt(response.credential);
     
@@ -16,17 +16,21 @@ function handleGoogleLogin(response) {
     window.location.href = 'index.html';
 }
 
-// Traditional Login (Student)
+// Traditional Login
 document.getElementById('studentLoginForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
-    const rollNumber = document.getElementById('rollNumber').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
     
-    if (rollNumber) {
-        sessionStorage.setItem('isLoggedIn', 'true');
-        sessionStorage.setItem('studentRollNumber', rollNumber);
-        sessionStorage.setItem('userRole', 'student');
-        window.location.href = 'student.html';
+    if (!email.endsWith('@gmail.com')) {
+        alert('❌ Please use a @gmail.com email address');
+        return;
     }
+    
+    sessionStorage.setItem('isLoggedIn', 'true');
+    sessionStorage.setItem('userEmail', email);
+    sessionStorage.setItem('userRole', 'student');
+    window.location.href = 'student.html';
 });
 
 function parseJwt(token) {

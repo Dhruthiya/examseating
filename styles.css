@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #4a90e2;
     min-height: 100vh;
     padding: 20px;
 }
@@ -17,7 +17,7 @@ body {
     background: white;
     padding: 40px;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 h1 {
@@ -26,10 +26,6 @@ h1 {
     text-align: center;
     font-size: 2.5em;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
 h1::after {
@@ -37,7 +33,7 @@ h1::after {
     display: block;
     width: 100px;
     height: 4px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #4a90e2;
     margin: 15px auto;
     border-radius: 2px;
 }
@@ -50,11 +46,11 @@ h2 {
 }
 
 .input-section {
-    background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+    background: #f8f9fa;
     padding: 30px;
     border-radius: 15px;
     margin-bottom: 30px;
-    border: 2px solid #e2e8f0;
+    border: 1px solid #e2e8f0;
 }
 
 .form-group {
@@ -81,11 +77,10 @@ input[type="number"] {
 input[type="number"]:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #4a90e2;
     color: white;
     padding: 14px 32px;
     border: none;
@@ -95,12 +90,11 @@ button {
     font-weight: 600;
     margin-right: 10px;
     transition: all 0.3s;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    transform: translateY(-1px);
+    opacity: 0.9;
 }
 
 button:active {
@@ -118,11 +112,9 @@ button:active {
 }
 
 .download-buttons button {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 .download-buttons button:hover {
-    box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
 }
 
 .branch-buttons {
@@ -139,22 +131,20 @@ button:active {
 }
 
 .count-btn {
-    background: linear-gradient(135deg, #a8b8d8 0%, #8e9ebc 100%);
+    background: #4a90e2;
     padding: 15px 30px;
     font-weight: 600;
     font-size: 18px;
     transition: all 0.3s;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     min-width: 60px;
 }
 
 .count-btn:hover {
-    transform: scale(1.05);
 }
 
 .count-btn.selected {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    background: #2c5aa0;
+    transform: scale(1.05);
 }
 
 .branch-btn {
@@ -165,11 +155,10 @@ button:active {
 }
 
 .branch-btn {
-    background: linear-gradient(135deg, #a8b8d8 0%, #8e9ebc 100%);
+    background: #4a90e2;
     padding: 15px 25px;
     font-weight: 600;
     transition: all 0.3s;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .branch-btn:disabled {
@@ -178,12 +167,11 @@ button:active {
 }
 
 .branch-btn:hover:not(:disabled) {
-    transform: scale(1.05);
 }
 
 .branch-btn.selected {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    box-shadow: 0 6px 20px rgba(56, 239, 125, 0.4);
+    background: #2c5aa0;
+    transform: scale(1.05);
 }
 
 .branch-btn.error-shake {
@@ -249,7 +237,7 @@ table {
     margin-top: 20px;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 th, td {
@@ -259,7 +247,7 @@ th, td {
 }
 
 th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #4a90e2;
     color: white;
     font-weight: 600;
     text-transform: uppercase;
@@ -285,11 +273,10 @@ tr:last-child td {
 }
 
 .classroom-table h3 {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #4a90e2;
     color: white;
     padding: 15px 20px;
     border-radius: 10px;
     margin-bottom: 15px;
     font-size: 1.3em;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }

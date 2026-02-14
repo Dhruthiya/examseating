@@ -32,72 +32,33 @@ function displayClassroomTables(seatingData, sections) {
         const classroomSeats = seatingData.filter(row => row.classroom === classroom.name);
         if (classroomSeats.length === 0) return;
         
-        const firstHalf = classroomSeats.slice(0, 16);
-        const secondHalf = classroomSeats.slice(16, 32);
+        const col1 = classroomSeats.slice(0, 8);
+        const col2 = classroomSeats.slice(8, 16);
+        const col3 = classroomSeats.slice(16, 24);
+        const col4 = classroomSeats.slice(24, 32);
         
         html += `
             <div class="classroom-table" style="margin-top: 30px;">
                 <h3>🚪 ${classroom.name}</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>🪑 Bench</th>
-                                <th>👤 Student 1 Roll Number</th>
-                                <th>📚 Student 1 Section</th>
-                                <th>👤 Student 2 Roll Number</th>
-                                <th>📚 Student 2 Section</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px;">
         `;
         
-        firstHalf.forEach(row => {
-            html += `
-                <tr>
-                    <td>${row.bench}</td>
-                    <td>${row.seat1.rollNo}</td>
-                    <td>${row.seat1.section}</td>
-                    <td>${row.seat2 ? row.seat2.rollNo : '-'}</td>
-                    <td>${row.seat2 ? row.seat2.section : '-'}</td>
-                </tr>
-            `;
+        [col1, col2, col3, col4].forEach((column, colIndex) => {
+            html += `<table><tbody>`;
+            
+            column.forEach(row => {
+                html += `
+                    <tr>
+                        <td>${row.seat1.rollNo}</td>
+                        <td>${row.seat2 ? row.seat2.rollNo : '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `</tbody></table>`;
         });
         
-        html += `
-                        </tbody>
-                    </table>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>🪑 Bench</th>
-                                <th>👤 Student 1 Roll Number</th>
-                                <th>📚 Student 1 Section</th>
-                                <th>👤 Student 2 Roll Number</th>
-                                <th>📚 Student 2 Section</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-        `;
-        
-        secondHalf.forEach(row => {
-            html += `
-                <tr>
-                    <td>${row.bench}</td>
-                    <td>${row.seat1.rollNo}</td>
-                    <td>${row.seat1.section}</td>
-                    <td>${row.seat2 ? row.seat2.rollNo : '-'}</td>
-                    <td>${row.seat2 ? row.seat2.section : '-'}</td>
-                </tr>
-            `;
-        });
-        
-        html += `
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
+        html += `</div></div>`;
     });
     
     document.getElementById('tableContainer').innerHTML = html;
@@ -120,7 +81,6 @@ function displayOverflow(students, additionalClassrooms) {
         <p style="color: #856404; font-size: 1.1em;">📊 Total overflow students: ${students.length}</p>
     </div>`;
     
-    // Sort room names numerically
     const sortedRoomNames = Object.keys(roomGroups).sort((a, b) => {
         const numA = parseInt(a.split('-')[2]);
         const numB = parseInt(b.split('-')[2]);
@@ -129,72 +89,33 @@ function displayOverflow(students, additionalClassrooms) {
     
     sortedRoomNames.forEach(roomName => {
         const roomSeats = roomGroups[roomName];
-        const firstHalf = roomSeats.slice(0, 16);
-        const secondHalf = roomSeats.slice(16, 32);
+        const col1 = roomSeats.slice(0, 8);
+        const col2 = roomSeats.slice(8, 16);
+        const col3 = roomSeats.slice(16, 24);
+        const col4 = roomSeats.slice(24, 32);
         
         html += `
             <div class="classroom-table" style="margin-top: 30px;">
                 <h3 style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);">🏫 ${roomName}</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>🪑 Bench</th>
-                                <th>👤 Student 1 Roll Number</th>
-                                <th>📚 Student 1 Section</th>
-                                <th>👤 Student 2 Roll Number</th>
-                                <th>📚 Student 2 Section</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px;">
         `;
         
-        firstHalf.forEach(row => {
-            html += `
-                <tr>
-                    <td>${row.bench}</td>
-                    <td>${row.seat1.rollNo}</td>
-                    <td>${row.seat1.section}</td>
-                    <td>${row.seat2 ? row.seat2.rollNo : '-'}</td>
-                    <td>${row.seat2 ? row.seat2.section : '-'}</td>
-                </tr>
-            `;
+        [col1, col2, col3, col4].forEach((column) => {
+            html += `<table><tbody>`;
+            
+            column.forEach(row => {
+                html += `
+                    <tr>
+                        <td>${row.seat1.rollNo}</td>
+                        <td>${row.seat2 ? row.seat2.rollNo : '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `</tbody></table>`;
         });
         
-        html += `
-                        </tbody>
-                    </table>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>🪑 Bench</th>
-                                <th>👤 Student 1 Roll Number</th>
-                                <th>📚 Student 1 Section</th>
-                                <th>👤 Student 2 Roll Number</th>
-                                <th>📚 Student 2 Section</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-        `;
-        
-        secondHalf.forEach(row => {
-            html += `
-                <tr>
-                    <td>${row.bench}</td>
-                    <td>${row.seat1.rollNo}</td>
-                    <td>${row.seat1.section}</td>
-                    <td>${row.seat2 ? row.seat2.rollNo : '-'}</td>
-                    <td>${row.seat2 ? row.seat2.section : '-'}</td>
-                </tr>
-            `;
-        });
-        
-        html += `
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
+        html += `</div></div>`;
     });
     
     document.getElementById('tableContainer').innerHTML += html;
@@ -235,6 +156,24 @@ function allocateOverflowSeats(students, classrooms) {
     }
     
     return result;
+}
+
+function saveData() {
+    const seatingData = sessionStorage.getItem('seatingData');
+    const overflowData = sessionStorage.getItem('overflowData');
+    const sections = sessionStorage.getItem('sections');
+    
+    if (!seatingData) {
+        alert('❌ No data to save!');
+        return;
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('seatingData', seatingData);
+    localStorage.setItem('overflowData', overflowData);
+    localStorage.setItem('sections', sections);
+    
+    alert('✅ Data saved successfully! Students can now search their seats.');
 }
 
 function downloadPDF() {
@@ -291,6 +230,30 @@ function downloadPDF() {
     }
     
     doc.save('seating-arrangement.pdf');
+}
+
+function shuffleArrangement() {
+    const sections = JSON.parse(sessionStorage.getItem('sections'));
+    const shuffled = [...sections].sort(() => Math.random() - 0.5);
+    
+    const classroomMapping = {};
+    sections.forEach((sec, idx) => {
+        classroomMapping[sec.name] = shuffled[idx].name;
+    });
+    
+    seatingData.forEach(seat => {
+        seat.classroom = classroomMapping[seat.classroom];
+    });
+    
+    sessionStorage.setItem('seatingData', JSON.stringify(seatingData));
+    sessionStorage.setItem('sections', JSON.stringify(shuffled));
+    
+    displayClassroomTables(seatingData, shuffled);
+    
+    if (overflowData.length > 0) {
+        const additionalClassrooms = Math.ceil(overflowData.length / 64);
+        displayOverflow(overflowData, additionalClassrooms);
+    }
 }
 
 function downloadExcel() {

@@ -117,28 +117,39 @@ function updateSubjectSelection() {
     
     selectedBranches.forEach(branch => {
         const div = document.createElement('div');
-        div.className = 'subject-section';
+        div.className = 'form-group';
         div.innerHTML = `
-            <h3>📖 ${branch} - Select Subject</h3>
-            <div class="subject-list" id="subjects-${branch}">
+            <label>📖 ${branch} - Subject:</label>
+            <select id="subject-${branch}" onchange="selectSubject('${branch}', this.value)" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
+                <option value="">Select Subject</option>
                 ${branchData[branch].subjects.map(subject => `
-                    <div class="subject-bar" onclick="selectSubject('${branch}', '${subject}')">
-                        ${subject}
-                    </div>
+                    <option value="${subject}">${subject}</option>
                 `).join('')}
-            </div>
+            </select>
         `;
         container.appendChild(div);
     });
+    
+    // Show date/time fields when subjects are loaded
+    document.getElementById('examDetailsSection').style.display = selectedBranches.size > 0 ? 'block' : 'none';
+    document.getElementById('examTimeSection').style.display = selectedBranches.size > 0 ? 'block' : 'none';
 }
 
 function selectSubject(branch, subject) {
     selectedSubjects[branch] = subject;
-    document.querySelectorAll(`#subjects-${branch} .subject-bar`).forEach(bar => {
-        bar.classList.remove('selected');
-    });
-    event.target.classList.add('selected');
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const examDateInput = document.getElementById('examDate');
+    const displayDate = document.getElementById('displayDate');
+    
+    examDateInput?.addEventListener('change', function() {
+        if (this.value) {
+            const [year, month, day] = this.value.split('-');
+            displayDate.textContent = `Selected: ${day}/${month}/${year}`;
+        }
+    });
+});
 
 function shuffleArray(array) {
     const shuffled = [...array];
@@ -171,6 +182,18 @@ function generateArrangement(enableShuffle = false) {
             return;
         }
     }
+    
+    const examDateInput = document.getElementById('examDate').value;
+    const examTime = document.getElementById('examTime').value;
+    
+    if (!examDateInput || !examTime) {
+        alert('⚠️ Please enter exam date and time');
+        return;
+    }
+    
+    // Convert date from yyyy-mm-dd to dd/mm/yyyy
+    const [year, month, day] = examDateInput.split('-');
+    const examDate = `${day}/${month}/${year}`;
     
     const sections = [];
     const students = [];
@@ -220,6 +243,8 @@ function generateArrangement(enableShuffle = false) {
     localStorage.setItem('seatingData', JSON.stringify(result.seated));
     localStorage.setItem('overflowData', JSON.stringify(result.overflow));
     localStorage.setItem('sections', JSON.stringify(finalSections));
+    localStorage.setItem('examDate', examDate);
+    localStorage.setItem('examTime', examTime);
     
     sessionStorage.setItem('seatingData', JSON.stringify(result.seated));
     sessionStorage.setItem('overflowData', JSON.stringify(result.overflow));
