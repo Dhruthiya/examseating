@@ -1,4 +1,4 @@
-function searchSeat() {
+async function searchSeat() {
     const searchInput = document.getElementById('searchInput').value.trim().toLowerCase();
     const resultSection = document.getElementById('resultSection');
     const errorMessage = document.getElementById('errorMessage');
@@ -12,7 +12,18 @@ function searchSeat() {
         return;
     }
     
-    // Get seating data from localStorage (persists across pages)
+    // Try Firebase first
+    console.log('Searching Firebase for roll:', searchInput);
+    const firebaseResult = await searchStudentByRoll(searchInput);
+    
+    if (firebaseResult.success) {
+        const student = firebaseResult.data;
+        displayResult(student);
+        return;
+    }
+    
+    // Fallback to localStorage if Firebase fails
+    console.log('Firebase search failed, trying localStorage...');
     const seatingData = localStorage.getItem('seatingData');
     const overflowData = localStorage.getItem('overflowData');
     
@@ -131,14 +142,39 @@ function allocateOverflowSeats(students) {
     return result;
 }
 
-function displayResult(rollNo, section, classroom, bench, partner, subject) {
+function displayResult(data) {
+    // Handle both Firebase format and localStorage format
+    let rollNo, section, classroom, bench, partner, subject, examDate, examTime;
+    
+    if (data.rollNumber) {
+        // Firebase format
+        rollNo = data.rollNumber;
+        section = data.section;
+        classroom = data.classroom;
+        bench = data.bench;
+        partner = data.partner;
+        subject = data.subject;
+        examDate = data.examDate;
+        examTime = data.examTime;
+    } else {
+        // localStorage format (old)
+        rollNo = data;
+        section = arguments[1];
+        classroom = arguments[2];
+        bench = arguments[3];
+        partner = arguments[4];
+        subject = arguments[5];
+        examDate = localStorage.getItem('examDate') || 'Not set';
+        examTime = localStorage.getItem('examTime') || 'Not set';
+    }
+    
     // Calculate row and column based on bench number
     const column = Math.ceil(bench / 8);
     const row = ((bench - 1) % 8) + 1;
     
     document.getElementById('subject').textContent = subject;
-    document.getElementById('examDate').textContent = localStorage.getItem('examDate') || 'Not set';
-    document.getElementById('examTime').textContent = localStorage.getItem('examTime') || 'Not set';
+    document.getElementById('examDate').textContent = examDate;
+    document.getElementById('examTime').textContent = examTime;
     document.getElementById('classroom').textContent = classroom;
     document.getElementById('column').textContent = column;
     document.getElementById('row').textContent = row;

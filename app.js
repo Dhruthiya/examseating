@@ -1,3 +1,6 @@
+// Firebase imports will be handled differently
+// import { saveSeatingArrangement, clearAllArrangements } from './firebase-config.js';
+
 let seatingData = [];
 let overflowData = [];
 let selectedBranchCount = 0;
@@ -250,7 +253,34 @@ function generateArrangement(enableShuffle = false) {
     sessionStorage.setItem('overflowData', JSON.stringify(result.overflow));
     sessionStorage.setItem('sections', JSON.stringify(finalSections));
     
-    window.location.href = 'results.html';
+    // Save to Firebase
+    console.log('Saving to Firebase...');
+    const savePromises = result.seated.map(seat => {
+        const rollMatch = seat.seat1.rollNo.match(/\d{4}$/);
+        const rollNumber = rollMatch ? rollMatch[0] : seat.seat1.rollNo;
+        
+        return saveSeatingArrangement({
+            rollNumber: rollNumber,
+            fullRollNo: seat.seat1.rollNo,
+            section: seat.seat1.section,
+            classroom: seat.classroom,
+            bench: seat.bench,
+            partner: seat.seat2 ? seat.seat2.rollNo : null,
+            partnerSection: seat.seat2 ? seat.seat2.section : null,
+            subject: seat.seat1.subject,
+            examDate: examDate,
+            examTime: examTime
+        });
+    });
+    
+    Promise.all(savePromises).then(() => {
+        console.log('✅ Saved to Firebase successfully');
+        window.location.href = 'results.html';
+    }).catch(error => {
+        console.error('❌ Firebase save error:', error);
+        alert('Data saved locally but Firebase sync failed. Check console.');
+        window.location.href = 'results.html';
+    });
 }
 
 function generateRollNumbers(branch) {
