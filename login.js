@@ -1,28 +1,30 @@
-document.getElementById('loginForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+// Google Sign-In callback
+async function handleGoogleLogin(response) {
+    const userInfo = parseJwt(response.credential);
+    const email = userInfo.email;
     const errorMsg = document.getElementById('errorMsg');
     
-    errorMsg.style.display = 'none';
+    console.log('🔐 Google login attempt:', email);
     
-    // Admin login
-    if (email === 'navyachinta31545@gmail.com' && password === '14181110') {
+    // Check if admin
+    if (email === 'navyachinta31545@gmail.com') {
+        console.log('✅ Admin login successful');
         sessionStorage.setItem('isLoggedIn', 'true');
         sessionStorage.setItem('userEmail', email);
+        sessionStorage.setItem('userName', userInfo.name);
+        sessionStorage.setItem('userPicture', userInfo.picture);
         sessionStorage.setItem('userRole', 'admin');
         window.location.href = 'index.html';
         return;
     }
     
-    // Student login - pattern: 25wh1a____@bvrithyderabad.edu.in
+    // Check if student email pattern: 25wh1a____@bvrithyderabad.edu.in
     const studentPattern = /^25wh1a([0-9a-z]{4})@bvrithyderabad\.edu\.in$/i;
     const match = email.match(studentPattern);
     
     if (match) {
-        const rollNumber = match[1].toLowerCase(); // Last 4 digits
-        
-        console.log('🔍 Searching for roll number:', rollNumber);
+        const rollNumber = match[1].toLowerCase();
+        console.log('🎓 Student login detected. Roll number:', rollNumber);
         
         // Check if Firebase functions are available
         if (typeof searchStudentByRoll === 'undefined') {
@@ -34,11 +36,13 @@ document.getElementById('loginForm')?.addEventListener('submit', async function(
         // Search Firebase for this student
         try {
             const result = await searchStudentByRoll(rollNumber);
-            console.log('Firebase result:', result);
             
             if (result.success) {
+                console.log('✅ Student found in database');
                 sessionStorage.setItem('isLoggedIn', 'true');
                 sessionStorage.setItem('userEmail', email);
+                sessionStorage.setItem('userName', userInfo.name);
+                sessionStorage.setItem('userPicture', userInfo.picture);
                 sessionStorage.setItem('userRole', 'student');
                 sessionStorage.setItem('rollNumber', rollNumber);
                 sessionStorage.setItem('studentData', JSON.stringify(result.data));
@@ -55,7 +59,17 @@ document.getElementById('loginForm')?.addEventListener('submit', async function(
         return;
     }
     
-    // Invalid credentials
-    errorMsg.textContent = '❌ Invalid email or password';
+    // Unauthorized email
+    console.log('❌ Unauthorized email:', email);
+    errorMsg.textContent = '❌ Unauthorized email. Only admin or students with @bvrithyderabad.edu.in can login.';
     errorMsg.style.display = 'block';
-});
+}
+
+function parseJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+}
