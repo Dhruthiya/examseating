@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Exam Seat Arrangement System</title>
     <link rel="stylesheet" href="home.css">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div class="home-container">
@@ -16,38 +15,23 @@
                 <p>Please login to continue</p>
             </div>
             
-            <!-- Traditional Login -->
-            <form id="studentLoginForm" style="width: 100%;">
+            <form id="loginForm" style="width: 100%;">
                 <input type="email" id="email" placeholder="Email" required 
                        style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 <input type="password" id="password" placeholder="Password" required 
                        style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
                 <button type="submit" style="width: 100%; padding: 12px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">
-                    Login as Student
+                    Login
                 </button>
             </form>
-
-            <div style="text-align: center; margin: 20px 0; color: #666;">OR</div>
-
-            <!-- Google Sign-In -->
-            <div style="margin: 20px 0;">
-                <div id="g_id_onload"
-                     data-client_id="80284631535-bf0igbecrqsfgsbkiqe77plh0jtuhdok.apps.googleusercontent.com"
-                     data-callback="handleGoogleLogin">
-                </div>
-                <div class="g_id_signin" 
-                     data-type="standard"
-                     data-size="large"
-                     data-theme="outline"
-                     data-text="sign_in_with"
-                     data-shape="rectangular"
-                     data-logo_alignment="left"
-                     style="display: flex; justify-content: center;">
-                </div>
-            </div>
+            
+            <div id="errorMsg" style="display: none; margin-top: 15px; padding: 10px; background: #fff5f5; color: #e53e3e; border-radius: 8px; text-align: center;"></div>
         </div>
     </div>
     
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config-simple.js"></script>
     <script src="login.js"></script>
 </body>
 </html>

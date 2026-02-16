@@ -48,15 +48,26 @@ async function getAllSeatingArrangements() {
 // Search student by roll number
 async function searchStudentByRoll(rollNumber) {
     try {
+        console.log('🔍 Searching Firebase for rollNumber:', rollNumber);
+        
         const querySnapshot = await db.collection('seatingArrangements')
             .where('rollNumber', '==', rollNumber)
             .get();
         
+        console.log('📊 Query returned', querySnapshot.size, 'documents');
+        
         if (querySnapshot.empty) {
+            // Debug: show what's actually in the database
+            const allDocs = await db.collection('seatingArrangements').limit(5).get();
+            console.log('Sample data in Firebase:');
+            allDocs.forEach(doc => {
+                console.log('  -', doc.data().rollNumber, '(full:', doc.data().fullRollNo, ')');
+            });
             return { success: false, error: 'Student not found' };
         }
         
         const studentData = querySnapshot.docs[0].data();
+        console.log('✅ Found student:', studentData);
         return { success: true, data: studentData };
     } catch (error) {
         console.error('Error searching Firebase:', error);

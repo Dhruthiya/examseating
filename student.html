@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student - Search Your Seat</title>
+    <title>Student - Your Seat Details</title>
     <link rel="stylesheet" href="student.css">
 </head>
 <body>
@@ -12,17 +12,11 @@
             <button class="back-btn" onclick="logout()">🚪 Logout</button>
             
             <div class="student-header">
-                <h1>🔍</h1>
-                <h2>Search Your Seating</h2>
-                <p>Enter the last 4 digits of your roll number</p>
+                <h1>🪑</h1>
+                <h2>Your Seating Details</h2>
             </div>
             
-            <div class="search-section">
-                <input type="text" id="searchInput" placeholder="e.g., 0501 or 05a1" maxlength="4">
-                <button onclick="searchSeat()">Search</button>
-            </div>
-            
-            <div id="resultSection" class="result-section" style="display: none;">
+            <div id="resultSection" class="result-section">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="result-card">
                         <h3>📋 Exam Details</h3>
@@ -61,18 +55,26 @@
                     </div>
                 </div>
             </div>
-            
-            <div id="errorMessage" class="error-message" style="display: none;"></div>
         </div>
     </div>
     
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config-simple.js"></script>
-    <script src="student.js"></script>
     <script>
-        if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'student') {
+        const studentData = JSON.parse(sessionStorage.getItem('studentData') || '{}');
+        
+        if (!studentData.rollNumber) {
+            alert('Please login first');
             window.location.href = 'home.html';
+        } else {
+            const bench = studentData.bench;
+            const column = Math.ceil(bench / 8);
+            const row = ((bench - 1) % 8) + 1;
+            
+            document.getElementById('subject').textContent = studentData.subject || 'N/A';
+            document.getElementById('examDate').textContent = studentData.examDate || 'N/A';
+            document.getElementById('examTime').textContent = studentData.examTime || 'N/A';
+            document.getElementById('classroom').textContent = studentData.classroom || 'N/A';
+            document.getElementById('column').textContent = column;
+            document.getElementById('row').textContent = row;
         }
         
         function logout() {

@@ -61,10 +61,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="app.js"></script>
     <script>
-        // TEMPORARILY DISABLED FOR TESTING
-        // if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
-        //     window.location.href = 'home.html';
-        // }
+        if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
+            window.location.href = 'home.html';
+        }
         
         function logout() {
             sessionStorage.clear();
