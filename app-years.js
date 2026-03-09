@@ -351,10 +351,6 @@ function generateArrangement() {
         }
     });
     
-    // Allocate seats with subject constraint
-    const rooms = Array.from(selectedRooms);
-    const sections = rooms.map(room => ({ name: room }));
-    
     // Group students by subject
     const studentsBySubject = {};
     students.forEach(student => {
