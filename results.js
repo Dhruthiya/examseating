@@ -32,10 +32,10 @@ function displayClassroomTables(seatingData, sections) {
         const classroomSeats = seatingData.filter(row => row.classroom === classroom.name);
         if (classroomSeats.length === 0) return;
         
-        const col1 = classroomSeats.slice(0, 8);
-        const col2 = classroomSeats.slice(8, 16);
-        const col3 = classroomSeats.slice(16, 24);
-        const col4 = classroomSeats.slice(24, 32);
+        const col1 = classroomSeats.slice(0, 7);
+        const col2 = classroomSeats.slice(7, 14);
+        const col3 = classroomSeats.slice(14, 21);
+        const col4 = classroomSeats.slice(21, 28);
         
         html += `
             <div class="classroom-table" style="margin-top: 30px;">
@@ -89,10 +89,10 @@ function displayOverflow(students, additionalClassrooms) {
     
     sortedRoomNames.forEach(roomName => {
         const roomSeats = roomGroups[roomName];
-        const col1 = roomSeats.slice(0, 8);
-        const col2 = roomSeats.slice(8, 16);
-        const col3 = roomSeats.slice(16, 24);
-        const col4 = roomSeats.slice(24, 32);
+        const col1 = roomSeats.slice(0, 7);
+        const col2 = roomSeats.slice(7, 14);
+        const col3 = roomSeats.slice(14, 21);
+        const col4 = roomSeats.slice(21, 28);
         
         html += `
             <div class="classroom-table" style="margin-top: 30px;">
@@ -149,7 +149,7 @@ function allocateOverflowSeats(students, classrooms) {
         });
         
         currentBench++;
-        if (currentBench > 32) {
+        if (currentBench > 28) {
             currentRoom++;
             currentBench = 1;
         }
