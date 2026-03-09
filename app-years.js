@@ -325,7 +325,7 @@ function generateArrangement() {
     const [year, month, day] = examDate.split('-');
     const formattedDate = `${day}/${month}/${year}`;
     
-    // Collect all students
+    // Collect all students with proper roll numbers
     const students = [];
     selectedYears.forEach(selectedYear => {
         const currentBranchData = yearData[selectedYear];
@@ -333,13 +333,15 @@ function generateArrangement() {
         if (yearBranchSelections[selectedYear]) {
             Object.keys(yearBranchSelections[selectedYear]).forEach(branch => {
                 const subject = selectedSubjects[`${selectedYear}-${branch}-${selectedSemester}`];
+                const rollNumbers = generateRollNumbers(branch, selectedYear);
                 
                 currentBranchData[branch].sections.forEach((sectionName, idx) => {
                     const numStudents = currentBranchData[branch].students[idx];
+                    const startIdx = currentBranchData[branch].sections.slice(0, idx).reduce((sum, _, i) => sum + currentBranchData[branch].students[i], 0);
                     
                     for (let j = 0; j < numStudents; j++) {
                         students.push({
-                            rollNo: `${selectedYear}${branch}${sectionName.slice(-2)}${(j+1).toString().padStart(2, '0')}`,
+                            rollNo: rollNumbers[startIdx + j],
                             section: sectionName,
                             subject: subject
                         });
@@ -717,3 +719,89 @@ const examTimeInput = document.getElementById('examTime');
 examTimeInput?.addEventListener('change', function() {
     checkRoomCalculation();
 });
+
+function generateRollNumbers(branch, year) {
+    const rolls = [];
+    const yearCode = year === 1 ? '25' : year === 2 ? '24' : year === 3 ? '23' : '22';
+    const branchCodes = { CSE: '05', ECE: '55', AIML: '66', EEE: '44' };
+    const code = branchCodes[branch];
+    
+    if (branch === 'CSE' && year === 1) {
+        // CSE Year 1: 385 students across 6 sections
+        for (let i = 1; i <= 64; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i.toString().padStart(2, '0')}`);
+        }
+        for (let i = 65; i <= 99; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i}`);
+        }
+        'abc'.split('').forEach(letter => {
+            const end = letter === 'c' ? 8 : 9;
+            for (let i = 0; i <= end; i++) {
+                rolls.push(`${yearCode}wh1a${code}${letter}${i}`);
+            }
+        });
+        rolls.push(`${yearCode}wh1a${code}c9`);
+        'defghj'.split('').forEach(letter => {
+            for (let i = 0; i <= 9; i++) {
+                rolls.push(`${yearCode}wh1a${code}${letter}${i}`);
+            }
+        });
+        for (let i = 0; i <= 3; i++) {
+            rolls.push(`${yearCode}wh1a${code}k${i}`);
+        }
+        for (let i = 4; i <= 9; i++) {
+            rolls.push(`${yearCode}wh1a${code}k${i}`);
+        }
+        'lmnpqr'.split('').forEach(letter => {
+            const end = letter === 'r' ? 7 : 9;
+            for (let i = 0; i <= end; i++) {
+                rolls.push(`${yearCode}wh1a${code}${letter}${i}`);
+            }
+        });
+        for (let i = 8; i <= 9; i++) {
+            rolls.push(`${yearCode}wh1a${code}r${i}`);
+        }
+        'tuvwxyz'.split('').forEach(letter => {
+            const end = letter === 'z' ? 1 : 9;
+            for (let i = 0; i <= end; i++) {
+                rolls.push(`${yearCode}wh1a${code}${letter}${i}`);
+            }
+        });
+        for (let i = 2; i <= 9; i++) {
+            rolls.push(`${yearCode}wh1a${code}z${i}`);
+        }
+        const letters = 'abcdefghjklmnpqrtuvwxyz'.split('');
+        for (let i = 0; i < letters.length; i++) {
+            for (let j = 0; j < letters.length; j++) {
+                const combo = letters[i] + letters[j];
+                if (combo === 'ci') rolls.push(`${yearCode}wh1a${code}ci`);
+                else if (!combo.includes('i') && !combo.includes('o') && !combo.includes('s')) {
+                    rolls.push(`${yearCode}wh1a${code}${combo}`);
+                }
+                if (combo === 'cj' || (letters[i] === 'c' && letters[j] === 'j')) break;
+            }
+            if (letters[i] === 'c') break;
+        }
+    } else if (branch === 'ECE' || branch === 'AIML') {
+        // ECE/AIML: 128 students (2 sections of 64 each)
+        for (let i = 1; i <= 64; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i.toString().padStart(2, '0')}`);
+        }
+        for (let i = 65; i <= 99; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i}`);
+        }
+        'abc'.split('').forEach(letter => {
+            const end = letter === 'c' ? 8 : 9;
+            for (let i = 0; i <= end; i++) {
+                rolls.push(`${yearCode}wh1a${code}${letter}${i}`);
+            }
+        });
+    } else if (branch === 'EEE') {
+        // EEE: 64 students (1 section)
+        for (let i = 1; i <= 64; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i.toString().padStart(2, '0')}`);
+        }
+    }
+    
+    return rolls;
+}
