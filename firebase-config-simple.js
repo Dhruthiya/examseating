@@ -19,11 +19,11 @@ const db = firebase.firestore();
 // Save seating arrangement to Firestore
 async function saveSeatingArrangement(data) {
     try {
-        const docRef = await db.collection('seatingArrangements').add({
+        await db.collection('seatingArrangements').doc(data.rollNumber).set({
             ...data,
             timestamp: new Date().toISOString()
         });
-        return { success: true, id: docRef.id };
+        return { success: true, id: data.rollNumber };
     } catch (error) {
         console.error('Error saving to Firebase:', error);
         return { success: false, error: error.message };
