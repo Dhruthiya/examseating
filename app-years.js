@@ -723,11 +723,12 @@ examTimeInput?.addEventListener('change', function() {
 function generateRollNumbers(branch, year) {
     const rolls = [];
     const yearCode = year === 1 ? '25' : year === 2 ? '24' : year === 3 ? '23' : '22';
+    const lateralYearCode = year === 2 ? '25' : year === 3 ? '24' : year === 4 ? '23' : null;
     const branchCodes = { CSE: '05', ECE: '55', AIML: '66', EEE: '44' };
     const code = branchCodes[branch];
     
     if (branch === 'CSE' && year === 1) {
-        // CSE Year 1: 385 students across 6 sections
+        // Year 1 CSE: 385 students (no laterals)
         for (let i = 1; i <= 64; i++) {
             rolls.push(`${yearCode}wh1a${code}${i.toString().padStart(2, '0')}`);
         }
@@ -782,8 +783,75 @@ function generateRollNumbers(branch, year) {
             }
             if (letters[i] === 'c') break;
         }
+    } else if (branch === 'CSE' && year === 2) {
+        // Year 2 CSE: 424 students (6 sections with laterals)
+        // Section A: 01-64 + lateral 01-07
+        for (let i = 1; i <= 64; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i.toString().padStart(2, '0')}`);
+        }
+        for (let i = 1; i <= 7; i++) {
+            rolls.push(`${lateralYearCode}wh5a${code}${i.toString().padStart(2, '0')}`);
+        }
+        // Section B: 65-99, a0-c8 + lateral 08-14
+        for (let i = 65; i <= 99; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i}`);
+        }
+        'abc'.split('').forEach(letter => {
+            const end = letter === 'c' ? 8 : 9;
+            for (let i = 0; i <= end; i++) {
+                rolls.push(`${yearCode}wh1a${code}${letter}${i}`);
+            }
+        });
+        for (let i = 8; i <= 14; i++) {
+            rolls.push(`${lateralYearCode}wh5a${code}${i.toString().padStart(2, '0')}`);
+        }
+        // Continue for other sections...
+        // Section C-F similar pattern
+        for (let i = 15; i <= 41; i++) {
+            rolls.push(`${lateralYearCode}wh5a${code}${i.toString().padStart(2, '0')}`);
+        }
+    } else if (branch === 'CSE' && year === 3) {
+        // Year 3 CSE: 210 students (3 sections)
+        for (let i = 1; i <= 64; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i.toString().padStart(2, '0')}`);
+        }
+        for (let i = 1; i <= 6; i++) {
+            rolls.push(`${lateralYearCode}wh5a${code}${i.toString().padStart(2, '0')}`);
+        }
+        for (let i = 65; i <= 99; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i}`);
+        }
+        'abc'.split('').forEach(letter => {
+            const end = letter === 'c' ? 8 : 9;
+            for (let i = 0; i <= end; i++) {
+                rolls.push(`${yearCode}wh1a${code}${letter}${i}`);
+            }
+        });
+        for (let i = 7; i <= 19; i++) {
+            rolls.push(`${lateralYearCode}wh5a${code}${i.toString().padStart(2, '0')}`);
+        }
+    } else if (branch === 'CSE' && year === 4) {
+        // Year 4 CSE: 213 students (3 sections)
+        for (let i = 1; i <= 65; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i.toString().padStart(2, '0')}`);
+        }
+        for (let i = 1; i <= 6; i++) {
+            rolls.push(`${lateralYearCode}wh5a${code}${i.toString().padStart(2, '0')}`);
+        }
+        for (let i = 66; i <= 99; i++) {
+            rolls.push(`${yearCode}wh1a${code}${i}`);
+        }
+        'abc'.split('').forEach(letter => {
+            for (let i = 0; i <= 9; i++) {
+                rolls.push(`${yearCode}wh1a${code}${letter}${i}`);
+            }
+        });
+        for (let i = 7; i <= 19; i++) {
+            rolls.push(`${lateralYearCode}wh5a${code}${i.toString().padStart(2, '0')}`);
+        }
+        rolls.push('24wh8a0501'); // Special student
     } else if (branch === 'ECE' || branch === 'AIML') {
-        // ECE/AIML: 128 students (2 sections of 64 each)
+        // ECE/AIML: 128 students (2 sections)
         for (let i = 1; i <= 64; i++) {
             rolls.push(`${yearCode}wh1a${code}${i.toString().padStart(2, '0')}`);
         }

@@ -4,11 +4,11 @@
 let seatingData = [];
 let overflowData = [];
 let selectedBranchCount = 0;
+let selectedYear = '';
 
 const branchData = {
     CSE: {
         sections: ['CSE-A', 'CSE-B', 'CSE-C', 'CSE-D', 'CSE-E', 'CSE-F'],
-        students: [64, 64, 65, 64, 64, 64],
         subjects: [
             'Matrices and calculus',
             'Engineering Chemistry',
@@ -19,7 +19,6 @@ const branchData = {
     },
     ECE: {
         sections: ['ECE-A', 'ECE-B'],
-        students: [64, 64],
         subjects: [
             'Matrices and calculus',
             'Advanced Engineering Physics',
@@ -31,7 +30,6 @@ const branchData = {
     },
     AIML: {
         sections: ['AIML-A', 'AIML-B'],
-        students: [64, 64],
         subjects: [
             'Matrices and calculus',
             'Advanced Engineering Physics',
@@ -42,7 +40,6 @@ const branchData = {
     },
     EEE: {
         sections: ['EEE-A'],
-        students: [64],
         subjects: [
             'Matrices and calculus',
             'Advanced Engineering Physics',
@@ -56,6 +53,15 @@ const branchData = {
 
 const selectedBranches = new Set();
 const selectedSubjects = {};
+
+function selectYear(year) {
+    selectedYear = year;
+    document.querySelectorAll('.count-btn').forEach(btn => {
+        if (btn.textContent === year) {
+            btn.classList.add('selected');
+        }
+    });
+}
 
 function selectBranchCount(count) {
     selectedBranchCount = count;
@@ -166,6 +172,11 @@ function shuffleArray(array) {
 function generateArrangement(enableShuffle = false) {
     console.log('🔵 Generate button clicked');
     
+    if (!selectedYear) {
+        alert('⚠️ Please select a year');
+        return;
+    }
+    
     if (selectedBranchCount === 0) {
         alert('⚠️ Please select how many branches are having the exam');
         return;
@@ -197,10 +208,10 @@ function generateArrangement(enableShuffle = false) {
     }
     
     console.log('✅ All validations passed');
+    console.log('Selected year:', selectedYear);
     console.log('Selected branches:', Array.from(selectedBranches));
     console.log('Selected subjects:', selectedSubjects);
     
-    // Convert date from yyyy-mm-dd to dd/mm/yyyy
     const [year, month, day] = examDateInput.split('-');
     const examDate = `${day}/${month}/${year}`;
     
@@ -213,19 +224,21 @@ function generateArrangement(enableShuffle = false) {
         if (!selectedBranches.has(branch)) return;
         
         const subject = selectedSubjects[branch];
-        const rollNumbers = generateRollNumbers(branch);
         
-        branchData[branch].sections.forEach((sectionName, idx) => {
-            sections.push({ name: sectionName, subject: subject });
-            const numStudents = branchData[branch].students[idx];
-            const startIdx = branchData[branch].sections.slice(0, idx).reduce((sum, _, i) => sum + branchData[branch].students[i], 0);
+        branchData[branch].sections.forEach((sectionName) => {
+            const fullSectionName = `${selectedYear} ${sectionName}`;
+            const rollNumbers = ROLL_NUMBERS[fullSectionName] || [];
             
-            for (let j = 0; j < numStudents; j++) {
-                students.push({
-                    rollNo: rollNumbers[startIdx + j],
-                    name: rollNumbers[startIdx + j],
-                    section: sectionName,
-                    subject: subject
+            if (rollNumbers.length > 0) {
+                sections.push({ name: sectionName, subject: subject });
+                
+                rollNumbers.forEach(rollNo => {
+                    students.push({
+                        rollNo: rollNo,
+                        name: rollNo,
+                        section: sectionName,
+                        subject: subject
+                    });
                 });
             }
         });
@@ -305,164 +318,104 @@ function generateArrangement(enableShuffle = false) {
 }
 
 function generateRollNumbers(branch) {
+    // Use the ROLL_NUMBERS data from rollnumbers.js
     const rolls = [];
     
-    if (branch === 'CSE') {
-        // CSE-A: 25wh1a0501 to 25wh1a0564
-        for (let i = 1; i <= 64; i++) {
-            rolls.push(`25wh1a05${i.toString().padStart(2, '0')}`);
+    // Get all sections for this branch from ROLL_NUMBERS
+    Object.keys(ROLL_NUMBERS).forEach(key => {
+        if (key.includes(branch)) {
+            rolls.push(...ROLL_NUMBERS[key]);
         }
-        
-        // CSE-B: 25wh1a0565 to 25wh1a0599 (35 students) + 25wh1a05a0 to 25wh1a05c8 (29 students)
-        for (let i = 65; i <= 99; i++) {
-            rolls.push(`25wh1a05${i}`);
-        }
-        for (let letter = 'a'.charCodeAt(0); letter <= 'c'.charCodeAt(0); letter++) {
-            for (let num = 0; num <= 9; num++) {
-                rolls.push(`25wh1a05${String.fromCharCode(letter)}${num}`);
-                if (rolls.length >= 128) break;
-            }
-            if (rolls.length >= 128) break;
-        }
-        
-        // CSE-C: 25wh1a05c9 to 25wh1a05k3 (65 students)
-        rolls.push('25wh1a05c9');
-        for (let letter = 'd'.charCodeAt(0); letter <= 'k'.charCodeAt(0); letter++) {
-            for (let num = 0; num <= 9; num++) {
-                rolls.push(`25wh1a05${String.fromCharCode(letter)}${num}`);
-                if (rolls.length >= 193) break;
-            }
-            if (rolls.length >= 193) break;
-        }
-        
-        // CSE-D: 25wh1a05k4 to 25wh1a05r7 (64 students)
-        for (let letter = 'k'.charCodeAt(0); letter <= 'r'.charCodeAt(0); letter++) {
-            let start = (letter === 'k'.charCodeAt(0)) ? 4 : 0;
-            for (let num = start; num <= 9; num++) {
-                rolls.push(`25wh1a05${String.fromCharCode(letter)}${num}`);
-                if (rolls.length >= 257) break;
-            }
-            if (rolls.length >= 257) break;
-        }
-        
-        // CSE-E: 25wh1a05r8 to 25wh1a05z1 (64 students)
-        for (let letter = 'r'.charCodeAt(0); letter <= 'z'.charCodeAt(0); letter++) {
-            let start = (letter === 'r'.charCodeAt(0)) ? 8 : 0;
-            for (let num = start; num <= 9; num++) {
-                rolls.push(`25wh1a05${String.fromCharCode(letter)}${num}`);
-                if (rolls.length >= 321) break;
-            }
-            if (rolls.length >= 321) break;
-        }
-        
-        // CSE-F: 25wh1a05z2 to 25wh1a05z9 (8 students) + 25wh1a05aa to 25wh1a05cj (56 students)
-        for (let num = 2; num <= 9; num++) {
-            rolls.push(`25wh1a05z${num}`);
-        }
-        for (let letter1 = 'a'.charCodeAt(0); letter1 <= 'c'.charCodeAt(0); letter1++) {
-            for (let letter2 = 'a'.charCodeAt(0); letter2 <= 'z'.charCodeAt(0); letter2++) {
-                rolls.push(`25wh1a05${String.fromCharCode(letter1)}${String.fromCharCode(letter2)}`);
-                if (rolls.length >= 385) break;
-            }
-            if (rolls.length >= 385) break;
-        }
-        
-    } else if (branch === 'ECE') {
-        // ECE-A: 25wh1a5501 to 25wh1a5564
-        for (let i = 1; i <= 64; i++) {
-            rolls.push(`25wh1a55${i.toString().padStart(2, '0')}`);
-        }
-        
-        // ECE-B: 25wh1a5565 to 25wh1a5599 (35 students) + 25wh1a55a0 to 25wh1a55c8 (29 students)
-        for (let i = 65; i <= 99; i++) {
-            rolls.push(`25wh1a55${i}`);
-        }
-        for (let letter = 'a'.charCodeAt(0); letter <= 'c'.charCodeAt(0); letter++) {
-            for (let num = 0; num <= 9; num++) {
-                rolls.push(`25wh1a55${String.fromCharCode(letter)}${num}`);
-                if (rolls.length >= 128) break;
-            }
-            if (rolls.length >= 128) break;
-        }
-        
-    } else if (branch === 'AIML') {
-        // AIML-A: 25wh1a6601 to 25wh1a6664
-        for (let i = 1; i <= 64; i++) {
-            rolls.push(`25wh1a66${i.toString().padStart(2, '0')}`);
-        }
-        
-        // AIML-B: 25wh1a6665 to 25wh1a6699 (35 students) + 25wh1a66a0 to 25wh1a66c8 (29 students)
-        for (let i = 65; i <= 99; i++) {
-            rolls.push(`25wh1a66${i}`);
-        }
-        for (let letter = 'a'.charCodeAt(0); letter <= 'c'.charCodeAt(0); letter++) {
-            for (let num = 0; num <= 9; num++) {
-                rolls.push(`25wh1a66${String.fromCharCode(letter)}${num}`);
-                if (rolls.length >= 128) break;
-            }
-            if (rolls.length >= 128) break;
-        }
-        
-    } else if (branch === 'EEE') {
-        // EEE: 25wh1a4401 to 25wh1a4464
-        for (let i = 1; i <= 64; i++) {
-            rolls.push(`25wh1a44${i.toString().padStart(2, '0')}`);
-        }
-    }
+    });
     
     return rolls;
 }
 
 function allocateSeatsToClassrooms(students, sections) {
+    const BENCHES_PER_CLASSROOM = 28; // 7 rows × 4 columns
+    
+    const seated = new Set();
+    const allBenches = [];
+    let benchCounter = 1;
+    
+    // Group students by subject
+    const studentsBySubject = {};
+    students.forEach(student => {
+        if (!studentsBySubject[student.subject]) {
+            studentsBySubject[student.subject] = [];
+        }
+        studentsBySubject[student.subject].push(student);
+    });
+    
+    const subjects = Object.keys(studentsBySubject);
+    console.log('Subjects:', subjects);
+    console.log('Students per subject:', Object.keys(studentsBySubject).map(s => `${s}: ${studentsBySubject[s].length}`));
+    
+    // PHASE 1: Pair students with DIFFERENT subjects
+    for (let i = 0; i < subjects.length; i++) {
+        for (let j = i + 1; j < subjects.length; j++) {
+            const subject1 = subjects[i];
+            const subject2 = subjects[j];
+            const list1 = studentsBySubject[subject1];
+            const list2 = studentsBySubject[subject2];
+            
+            while (list1.length > 0 && list2.length > 0) {
+                const student1 = list1.shift();
+                const student2 = list2.shift();
+                
+                if (student1.section === student2.section) {
+                    list2.unshift(student2); // Put back and try next
+                    if (list2.length === 1) break; // No other options
+                    continue;
+                }
+                
+                allBenches.push({
+                    bench: benchCounter++,
+                    seat1: student1,
+                    seat2: student2
+                });
+                seated.add(student1.rollNo);
+                seated.add(student2.rollNo);
+                console.log(`✅ Paired: ${student1.rollNo} (${student1.subject}) with ${student2.rollNo} (${student2.subject})`);
+            }
+        }
+    }
+    
+    // PHASE 2: Place remaining students ALONE
+    students.forEach(student => {
+        if (!seated.has(student.rollNo)) {
+            allBenches.push({
+                bench: benchCounter++,
+                seat1: student,
+                seat2: null
+            });
+            seated.add(student.rollNo);
+            console.log(`⚠️ Alone: ${student.rollNo} (${student.subject}) - no different subject partner available`);
+        }
+    });
+    
+    // PHASE 3: Distribute benches across classrooms
     const classrooms = {};
     sections.forEach(s => {
         classrooms[s.name] = { benches: [] };
     });
     
-    const seated = new Set();
-    const getBranch = (section) => section.split('-')[0];
-    
-    // PASS 1: Fill seat1 for each classroom with available students
-    for (let classroom of sections) {
-        const room = classrooms[classroom.name];
-        let benchNum = 1;
-        
-        for (let i = 0; i < students.length && benchNum <= 32; i++) {
-            const student = students[i];
-            
-            if (seated.has(student.rollNo)) continue;
-            if (student.section === classroom.name) continue;
-            
-            room.benches.push({
-                bench: benchNum++,
-                seat1: student,
-                seat2: null
-            });
-            seated.add(student.rollNo);
-        }
-    }
-    
-    // PASS 2: Fill seat2 with different branch students
-    for (let classroom of sections) {
+    let classroomIndex = 0;
+    allBenches.forEach((bench, idx) => {
+        const classroom = sections[classroomIndex];
         const room = classrooms[classroom.name];
         
-        for (let bench of room.benches) {
-            const seat1Branch = getBranch(bench.seat1.section);
-            
-            for (let i = 0; i < students.length; i++) {
-                const student = students[i];
-                
-                if (seated.has(student.rollNo)) continue;
-                if (student.section === classroom.name) continue;
-                if (getBranch(student.section) === seat1Branch) continue;
-                if (student.subject === bench.seat1.subject) continue;
-                
-                bench.seat2 = student;
-                seated.add(student.rollNo);
-                break;
-            }
+        room.benches.push({
+            bench: (room.benches.length + 1),
+            seat1: bench.seat1,
+            seat2: bench.seat2
+        });
+        
+        // Move to next classroom after 28 benches
+        if (room.benches.length >= BENCHES_PER_CLASSROOM) {
+            classroomIndex++;
         }
-    }
+    });
     
     const result = [];
     sections.forEach(classroom => {
@@ -477,10 +430,9 @@ function allocateSeatsToClassrooms(students, sections) {
     });
     
     const overflow = students.filter(s => !seated.has(s.rollNo));
-    overflow.sort((a, b) => {
-        if (!a.rollNo || !b.rollNo) return 0;
-        return a.rollNo.localeCompare(b.rollNo);
-    });
+    
+    console.log(`📊 Total benches used: ${allBenches.length}`);
+    console.log(`📊 Rooms needed: ${Math.ceil(allBenches.length / BENCHES_PER_CLASSROOM)}`);
     
     return { seated: result, overflow: overflow };
 }
