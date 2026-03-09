@@ -280,3 +280,26 @@ tr:last-child td {
     margin-bottom: 15px;
     font-size: 1.3em;
 }
+
+.year-btn {
+    background: #4a90e2;
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s;
+    flex: 1;
+}
+
+.year-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+}
+
+.year-btn.selected {
+    background: #2c5aa0;
+    transform: scale(1.05);
+}

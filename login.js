@@ -14,7 +14,7 @@ async function handleGoogleLogin(response) {
         sessionStorage.setItem('userName', userInfo.name);
         sessionStorage.setItem('userPicture', userInfo.picture);
         sessionStorage.setItem('userRole', 'admin');
-        window.location.href = 'index.html';
+        window.location.href = 'index-years.html';
         return;
     }
     
