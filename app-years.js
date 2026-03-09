@@ -457,6 +457,8 @@ function generateArrangement() {
                 const rollMatch = seat.seat1.rollNo.match(/([0-9a-z]{4})$/i);
                 const rollNumber = rollMatch ? rollMatch[1].toLowerCase() : seat.seat1.rollNo;
                 
+                console.log(`Saving: ${seat.seat1.rollNo} → ${rollNumber}`);
+                
                 return saveSeatingArrangement({
                     rollNumber: rollNumber,
                     fullRollNo: seat.seat1.rollNo,
