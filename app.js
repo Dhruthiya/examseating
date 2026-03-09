@@ -5,6 +5,7 @@ let seatingData = [];
 let overflowData = [];
 let selectedBranchCount = 0;
 let selectedYear = '';
+window.isSavingData = false;
 
 const branchData = {
     CSE: {
@@ -146,17 +147,39 @@ function updateSubjectSelection() {
 
 function selectSubject(branch, subject) {
     selectedSubjects[branch] = subject;
+    checkIfReadyToGenerate();
+}
+
+function checkIfReadyToGenerate() {
+    const examDate = document.getElementById('examDate')?.value;
+    const examTime = document.getElementById('examTime')?.value;
+    
+    const allSubjectsSelected = selectedBranches.size > 0 && 
+        Array.from(selectedBranches).every(branch => selectedSubjects[branch]);
+    
+    const generateBtn = document.getElementById('generateButtonSection');
+    if (selectedYear && allSubjectsSelected && examDate && examTime) {
+        generateBtn.style.display = 'block';
+    } else {
+        generateBtn.style.display = 'none';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     const examDateInput = document.getElementById('examDate');
     const displayDate = document.getElementById('displayDate');
+    const examTimeInput = document.getElementById('examTime');
     
     examDateInput?.addEventListener('change', function() {
         if (this.value) {
             const [year, month, day] = this.value.split('-');
             displayDate.textContent = `Selected: ${day}/${month}/${year}`;
         }
+        checkIfReadyToGenerate();
+    });
+    
+    examTimeInput?.addEventListener('change', function() {
+        checkIfReadyToGenerate();
     });
 });
 
@@ -272,49 +295,11 @@ function generateArrangement(enableShuffle = false) {
     sessionStorage.setItem('seatingData', JSON.stringify(result.seated));
     sessionStorage.setItem('overflowData', JSON.stringify(result.overflow));
     sessionStorage.setItem('sections', JSON.stringify(finalSections));
+    sessionStorage.setItem('examDate', examDate);
+    sessionStorage.setItem('examTime', examTime);
     
-    // Clear old data and save to Firebase
-    console.log('Clearing old Firebase data...');
-    
-    if (typeof clearAllArrangements === 'undefined') {
-        console.error('❌ Firebase functions not loaded!');
-        alert('Firebase not connected. Data saved locally only.');
-        window.location.href = 'results.html';
-        return;
-    }
-    
-    clearAllArrangements().then(() => {
-        console.log('✅ Old data cleared');
-        console.log('Saving new data to Firebase...');
-        const savePromises = result.seated.map(seat => {
-            const rollMatch = seat.seat1.rollNo.match(/([0-9a-z]{4})$/i);
-            const rollNumber = rollMatch ? rollMatch[1].toLowerCase() : seat.seat1.rollNo;
-            
-            console.log('Saving:', seat.seat1.rollNo, '→ rollNumber:', rollNumber);
-            
-            return saveSeatingArrangement({
-                rollNumber: rollNumber,
-                fullRollNo: seat.seat1.rollNo,
-                section: seat.seat1.section,
-                classroom: seat.classroom,
-                bench: seat.bench,
-                partner: seat.seat2 ? seat.seat2.rollNo : null,
-                partnerSection: seat.seat2 ? seat.seat2.section : null,
-                subject: seat.seat1.subject,
-                examDate: examDate,
-                examTime: examTime
-            });
-        });
-        
-        return Promise.all(savePromises);
-    }).then(() => {
-        console.log('✅ Saved to Firebase successfully');
-        window.location.href = 'results.html';
-    }).catch(error => {
-        console.error('❌ Firebase error:', error);
-        alert('Data saved locally but Firebase sync failed: ' + error.message);
-        window.location.href = 'results.html';
-    });
+    // Don't save to Firebase, just go to results page
+    window.location.href = 'results.html';
 }
 
 function generateRollNumbers(branch) {

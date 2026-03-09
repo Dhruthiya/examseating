@@ -37,6 +37,10 @@
         }
         
         function logout() {
+            if (window.isSavingData) {
+                alert('⏳ Data is currently being saved. Please wait...');
+                return;
+            }
             sessionStorage.removeItem('isLoggedIn');
             sessionStorage.removeItem('seatingData');
             sessionStorage.removeItem('overflowData');

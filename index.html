@@ -57,7 +57,7 @@
                 <input type="time" id="examTime" required style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
             </div>
             
-            <div style="text-align: center; margin-top: 20px;">
+            <div id="generateButtonSection" style="text-align: center; margin-top: 20px; display: none;">
                 <button onclick="generateArrangement(false)" style="background: #4a90e2;">✨ Generate Arrangement</button>
             </div>
         </div>
@@ -77,6 +77,10 @@
         }
         
         function logout() {
+            if (window.isSavingData) {
+                alert('⏳ Data is currently being saved. Please wait...');
+                return;
+            }
             sessionStorage.clear();
             window.location.href = 'home.html';
         }

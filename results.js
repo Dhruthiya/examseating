@@ -159,21 +159,63 @@ function allocateOverflowSeats(students, classrooms) {
 }
 
 function saveData() {
-    const seatingData = sessionStorage.getItem('seatingData');
+    const seatingData = JSON.parse(sessionStorage.getItem('seatingData'));
     const overflowData = sessionStorage.getItem('overflowData');
     const sections = sessionStorage.getItem('sections');
+    const examDate = sessionStorage.getItem('examDate');
+    const examTime = sessionStorage.getItem('examTime');
     
     if (!seatingData) {
         alert('❌ No data to save!');
         return;
     }
     
-    // Save to localStorage
-    localStorage.setItem('seatingData', seatingData);
-    localStorage.setItem('overflowData', overflowData);
-    localStorage.setItem('sections', sections);
+    if (typeof clearAllArrangements === 'undefined' || typeof saveSeatingArrangement === 'undefined') {
+        alert('❌ Firebase not connected!');
+        return;
+    }
     
-    alert('✅ Data saved successfully! Students can now search their seats.');
+    window.isSavingData = true;
+    console.log('💾 Saving data to Firebase...');
+    
+    clearAllArrangements().then(() => {
+        console.log('✅ Old data cleared');
+        const savePromises = seatingData.map(seat => {
+            const rollMatch = seat.seat1.rollNo.match(/([0-9a-z]{4})$/i);
+            const rollNumber = rollMatch ? rollMatch[1].toLowerCase() : seat.seat1.rollNo;
+            
+            return saveSeatingArrangement({
+                rollNumber: rollNumber,
+                fullRollNo: seat.seat1.rollNo,
+                section: seat.seat1.section,
+                classroom: seat.classroom,
+                bench: seat.bench,
+                partner: seat.seat2 ? seat.seat2.rollNo : null,
+                partnerSection: seat.seat2 ? seat.seat2.section : null,
+                subject: seat.seat1.subject,
+                examDate: examDate,
+                examTime: examTime
+            });
+        });
+        
+        return Promise.all(savePromises);
+    }).then(() => {
+        console.log('✅ Saved to Firebase successfully');
+        window.isSavingData = false;
+        
+        // Save to localStorage
+        localStorage.setItem('seatingData', JSON.stringify(seatingData));
+        localStorage.setItem('overflowData', overflowData);
+        localStorage.setItem('sections', sections);
+        localStorage.setItem('examDate', examDate);
+        localStorage.setItem('examTime', examTime);
+        
+        alert('✅ Data saved successfully! Students can now check their seating arrangement.');
+    }).catch(error => {
+        console.error('❌ Firebase error:', error);
+        window.isSavingData = false;
+        alert('❌ Error saving to Firebase: ' + error.message);
+    });
 }
 
 function downloadPDF() {
@@ -235,30 +277,7 @@ function downloadPDF() {
 function shuffleArrangement() {
     if (typeof clearAllArrangements === 'undefined' || typeof saveSeatingArrangement === 'undefined') {
         console.error('❌ Firebase functions not loaded');
-        alert('⚠️ Firebase not connected. Shuffle displayed but not saved.');
-        
-        // Still do the visual shuffle
-        const sections = JSON.parse(sessionStorage.getItem('sections'));
-        const shuffled = [...sections].sort(() => Math.random() - 0.5);
-        
-        const classroomMapping = {};
-        sections.forEach((sec, idx) => {
-            classroomMapping[sec.name] = shuffled[idx].name;
-        });
-        
-        seatingData.forEach(seat => {
-            seat.classroom = classroomMapping[seat.classroom];
-        });
-        
-        sessionStorage.setItem('seatingData', JSON.stringify(seatingData));
-        sessionStorage.setItem('sections', JSON.stringify(shuffled));
-        
-        displayClassroomTables(seatingData, shuffled);
-        
-        if (overflowData.length > 0) {
-            const additionalClassrooms = Math.ceil(overflowData.length / 64);
-            displayOverflow(overflowData, additionalClassrooms);
-        }
+        alert('⚠️ Firebase not connected.');
         return;
     }
     
@@ -277,14 +296,15 @@ function shuffleArrangement() {
     sessionStorage.setItem('seatingData', JSON.stringify(seatingData));
     sessionStorage.setItem('sections', JSON.stringify(shuffled));
     
-    // Save shuffled data to Firebase
+    window.isSavingData = true;
     console.log('💾 Saving shuffled arrangement to Firebase...');
     
     clearAllArrangements().then(() => {
         console.log('✅ Old data cleared');
         const savePromises = seatingData.map(seat => {
             if (seat.seat1) {
-                const rollNumber = seat.seat1.rollNo.toLowerCase();
+                const rollMatch = seat.seat1.rollNo.match(/([0-9a-z]{4})$/i);
+                const rollNumber = rollMatch ? rollMatch[1].toLowerCase() : seat.seat1.rollNo;
                 
                 return saveSeatingArrangement({
                     rollNumber: rollNumber,
@@ -304,10 +324,17 @@ function shuffleArrangement() {
         return Promise.all(savePromises);
     }).then(() => {
         console.log('✅ Shuffled data saved to Firebase');
-        alert('✅ Shuffled arrangement saved successfully!');
+        window.isSavingData = false;
+        
+        // Save to localStorage
+        localStorage.setItem('seatingData', JSON.stringify(seatingData));
+        localStorage.setItem('sections', JSON.stringify(shuffled));
+        
+        alert('✅ Shuffled arrangement saved successfully! Students can now check their seating arrangement.');
     }).catch(error => {
         console.error('❌ Error saving shuffle:', error);
-        alert('⚠️ Shuffle displayed but Firebase save failed: ' + error.message);
+        window.isSavingData = false;
+        alert('❌ Error saving to Firebase: ' + error.message);
     });
     
     displayClassroomTables(seatingData, shuffled);
