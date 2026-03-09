@@ -254,8 +254,7 @@ function shuffleArrangement() {
     clearAllArrangements().then(() => {
         const savePromises = seatingData.map(seat => {
             if (seat.seat1) {
-                const rollMatch = seat.seat1.rollNo.match(/([0-9a-z]{4})$/i);
-                const rollNumber = rollMatch ? rollMatch[1].toLowerCase() : seat.seat1.rollNo;
+                const rollNumber = seat.seat1.rollNo.toLowerCase();
                 
                 return saveSeatingArrangement({
                     rollNumber: rollNumber,

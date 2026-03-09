@@ -11,12 +11,12 @@ if (!rollNo) {
 
 async function searchSeat(rollNumber) {
     try {
-        const rollLast4 = rollNumber.slice(-4).toLowerCase();
-        console.log('Searching for:', rollNumber, '→', rollLast4);
+        const rollLower = rollNumber.toLowerCase();
+        console.log('Searching for:', rollNumber, '→', rollLower);
         
         const doc = await firebase.firestore()
             .collection('seatingArrangements')
-            .doc(rollLast4)
+            .doc(rollLower)
             .get();
         
         if (doc.exists) {
@@ -40,7 +40,7 @@ async function searchSeat(rollNumber) {
             document.getElementById('row').textContent = row;
             document.getElementById('column').textContent = column;
         } else {
-            console.log('No data found for:', rollLast4);
+            console.log('No data found for:', rollLower);
             document.getElementById('loadingSection').style.display = 'none';
             document.getElementById('notFoundSection').style.display = 'block';
         }
