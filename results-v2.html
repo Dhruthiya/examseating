@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seating Arrangement Results</title>
+    <link rel="stylesheet" href="styles-v2.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Seating Arrangement Results</h1>
+            <div>
+                <button onclick="window.location.href='index-v2.html'" class="back-btn">🔙 Back</button>
+                <button onclick="logout()" class="logout-btn">🚪 Logout</button>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button onclick="shuffleArrangement()" class="shuffle-btn">🔀 Shuffle & Save</button>
+        </div>
+        
+        <div id="tableContainer"></div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config-simple.js"></script>
+    <script src="results-v2.js"></script>
+    <script>
+        if (!sessionStorage.getItem('isLoggedIn')) {
+            window.location.href = 'home.html';
+        }
+        
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'home.html';
+        }
+    </script>
+</body>
+</html>
