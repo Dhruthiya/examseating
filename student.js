@@ -23,6 +23,11 @@ async function searchSeat(rollNumber) {
             const data = doc.data();
             console.log('Found data:', data);
             
+            // Calculate row and column from bench number (7 rows × 4 columns)
+            const bench = data.bench;
+            const column = Math.ceil(bench / 7);
+            const row = ((bench - 1) % 7) + 1;
+            
             document.getElementById('loadingSection').style.display = 'none';
             document.getElementById('resultSection').style.display = 'block';
             
@@ -30,9 +35,11 @@ async function searchSeat(rollNumber) {
             document.getElementById('subject').textContent = data.subject || 'N/A';
             document.getElementById('examDate').textContent = data.examDate || 'N/A';
             document.getElementById('examTime').textContent = data.examTime || 'N/A';
+            document.getElementById('section').textContent = data.section || 'N/A';
             document.getElementById('classroom').textContent = data.classroom || 'N/A';
-            document.getElementById('bench').textContent = data.bench || 'N/A';
-            document.getElementById('partner').textContent = data.partner || 'None (Sitting Alone)';
+            document.getElementById('bench').textContent = bench || 'N/A';
+            document.getElementById('row').textContent = row;
+            document.getElementById('column').textContent = column;
         } else {
             console.log('No data found for:', rollLast4);
             document.getElementById('loadingSection').style.display = 'none';
