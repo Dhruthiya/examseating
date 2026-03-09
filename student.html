@@ -9,14 +9,22 @@
 <body>
     <div class="student-container">
         <div class="student-box">
-            <button class="back-btn" onclick="logout()">🚪 Logout</button>
+            <button class="back-btn" onclick="goBack()">🔙 Back</button>
             
             <div class="student-header">
                 <h1>🪑</h1>
                 <h2>Your Seating Details</h2>
             </div>
             
-            <div id="resultSection" class="result-section">
+            <div id="loadingSection" style="text-align: center; padding: 40px;">
+                <p style="font-size: 18px; color: #6b7280;">🔍 Searching for your seat...</p>
+            </div>
+            
+            <div id="resultSection" class="result-section" style="display: none;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h3 style="color: #1e40af; font-size: 24px; margin: 0;">Roll Number: <span id="rollNumber"></span></h3>
+                </div>
+                
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="result-card">
                         <h3>📋 Exam Details</h3>
@@ -44,43 +52,29 @@
                                 <span class="value" id="classroom"></span>
                             </div>
                             <div class="info-row">
-                                <span class="label">Column:</span>
-                                <span class="value" id="column"></span>
+                                <span class="label">Bench:</span>
+                                <span class="value" id="bench"></span>
                             </div>
                             <div class="info-row">
-                                <span class="label">Row:</span>
-                                <span class="value" id="row"></span>
+                                <span class="label">Partner:</span>
+                                <span class="value" id="partner"></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <div id="notFoundSection" style="display: none; text-align: center; padding: 40px;">
+                <h3 style="color: #dc2626; font-size: 20px;">❌ Seat Not Found</h3>
+                <p style="color: #6b7280; margin-top: 10px;">No seating arrangement found for this roll number.</p>
+                <p style="color: #6b7280;">Please check your roll number or contact admin.</p>
+            </div>
         </div>
     </div>
     
-    <script>
-        const studentData = JSON.parse(sessionStorage.getItem('studentData') || '{}');
-        
-        if (!studentData.rollNumber) {
-            alert('Please login first');
-            window.location.href = 'home.html';
-        } else {
-            const bench = studentData.bench;
-            const column = Math.ceil(bench / 8);
-            const row = ((bench - 1) % 8) + 1;
-            
-            document.getElementById('subject').textContent = studentData.subject || 'N/A';
-            document.getElementById('examDate').textContent = studentData.examDate || 'N/A';
-            document.getElementById('examTime').textContent = studentData.examTime || 'N/A';
-            document.getElementById('classroom').textContent = studentData.classroom || 'N/A';
-            document.getElementById('column').textContent = column;
-            document.getElementById('row').textContent = row;
-        }
-        
-        function logout() {
-            sessionStorage.clear();
-            window.location.href = 'home.html';
-        }
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config-simple.js"></script>
+    <script src="student.js"></script>
 </body>
 </html>
