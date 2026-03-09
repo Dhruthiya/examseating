@@ -317,6 +317,11 @@ function generateArrangement() {
         return;
     }
     
+    if (selectedRooms.size === 0) {
+        alert('⚠️ Please select rooms first');
+        return;
+    }
+    
     const [year, month, day] = examDate.split('-');
     const formattedDate = `${day}/${month}/${year}`;
     
@@ -334,7 +339,7 @@ function generateArrangement() {
                     
                     for (let j = 0; j < numStudents; j++) {
                         students.push({
-                            rollNo: `Student-${selectedYear}-${branch}-${sectionName}-${j+1}`,
+                            rollNo: `${selectedYear}${branch}${sectionName.slice(-2)}${(j+1).toString().padStart(2, '0')}`,
                             section: sectionName,
                             subject: subject
                         });
@@ -344,11 +349,38 @@ function generateArrangement() {
         }
     });
     
+    // Allocate seats
+    const rooms = Array.from(selectedRooms);
+    const seatingResult = [];
+    let studentIndex = 0;
+    
+    rooms.forEach(room => {
+        for (let bench = 1; bench <= 28; bench++) {
+            const seat1 = students[studentIndex++];
+            const seat2 = students[studentIndex++];
+            
+            if (seat1) {
+                seatingResult.push({
+                    classroom: room,
+                    bench: bench,
+                    seat1: seat1,
+                    seat2: seat2 || null
+                });
+            }
+        }
+    });
+    
+    // Save to sessionStorage for results page
+    sessionStorage.setItem('seatingData', JSON.stringify(seatingResult));
+    sessionStorage.setItem('examDate', formattedDate);
+    sessionStorage.setItem('examTime', examTime);
+    
     // Save to Firebase
     console.log('Clearing old Firebase data...');
     
     if (typeof clearAllArrangements === 'undefined') {
-        alert('Firebase not connected. Please check configuration.');
+        alert('Firebase not connected. Redirecting to results...');
+        window.location.href = 'results.html';
         return;
     }
     
@@ -356,27 +388,34 @@ function generateArrangement() {
         console.log('✅ Old data cleared');
         console.log('Saving new data to Firebase...');
         
-        const savePromises = students.map((student, idx) => {
-            return saveSeatingArrangement({
-                rollNumber: `${idx+1}`.padStart(4, '0'),
-                fullRollNo: student.rollNo,
-                section: student.section,
-                classroom: 'TBD',
-                bench: Math.floor(idx / 2) + 1,
-                partner: null,
-                subject: student.subject,
-                examDate: formattedDate,
-                examTime: examTime
-            });
+        const savePromises = seatingResult.map(seat => {
+            if (seat.seat1) {
+                const rollMatch = seat.seat1.rollNo.match(/([0-9a-z]{4})$/i);
+                const rollNumber = rollMatch ? rollMatch[1].toLowerCase() : seat.seat1.rollNo;
+                
+                return saveSeatingArrangement({
+                    rollNumber: rollNumber,
+                    fullRollNo: seat.seat1.rollNo,
+                    section: seat.seat1.section,
+                    classroom: seat.classroom,
+                    bench: seat.bench,
+                    partner: seat.seat2 ? seat.seat2.rollNo : null,
+                    partnerSection: seat.seat2 ? seat.seat2.section : null,
+                    subject: seat.seat1.subject,
+                    examDate: formattedDate,
+                    examTime: examTime
+                });
+            }
         });
         
         return Promise.all(savePromises);
     }).then(() => {
         console.log('✅ Saved to Firebase successfully');
-        alert('✅ Seating arrangement generated and saved!');
+        window.location.href = 'results.html';
     }).catch(error => {
         console.error('❌ Firebase error:', error);
-        alert('Error: ' + error.message);
+        alert('Data saved locally. Redirecting to results...');
+        window.location.href = 'results.html';
     });
 }
 
@@ -463,24 +502,148 @@ function getAllAvailableRooms() {
 }
 
 function startAutoAssign(roomsRequired) {
-    const allRooms = getAllAvailableRooms();
-    const autoSelectedRooms = allRooms.slice(0, roomsRequired);
+    // Get section rooms from selected years/branches
+    const sectionRooms = [];
+    selectedYears.forEach(year => {
+        const currentBranchData = yearData[year];
+        if (yearBranchSelections[year]) {
+            Object.keys(yearBranchSelections[year]).forEach(branch => {
+                currentBranchData[branch].sections.forEach(section => {
+                    sectionRooms.push(section);
+                });
+            });
+        }
+    });
     
     selectedRooms.clear();
-    autoSelectedRooms.forEach(room => selectedRooms.add(room));
+    sectionRooms.forEach(room => selectedRooms.add(room));
+    
+    const sectionRoomCapacity = sectionRooms.length * 56; // 28 benches × 2 students
+    let totalStudents = 0;
+    
+    selectedYears.forEach(year => {
+        const currentBranchData = yearData[year];
+        if (yearBranchSelections[year]) {
+            Object.keys(yearBranchSelections[year]).forEach(branch => {
+                const branchTotal = currentBranchData[branch].students.reduce((a, b) => a + b, 0);
+                totalStudents += branchTotal;
+            });
+        }
+    });
+    
+    const additionalStudents = Math.max(0, totalStudents - sectionRoomCapacity);
+    const additionalRoomsNeeded = Math.ceil(additionalStudents / 56);
     
     const container = document.getElementById('roomSelectionDisplay');
     container.innerHTML = `
-        <h4 style="margin-top: 20px; color: #4caf50;">✨ Auto Assigned Rooms:</h4>
+        <h4 style="margin-top: 20px; color: #4caf50;">✨ Auto Assign - Section Rooms:</h4>
         <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 10px 0;">
-            <p style="margin: 5px 0;"><strong>🏫 Rooms Selected:</strong> ${roomsRequired} rooms</p>
+            <p style="margin: 5px 0;"><strong>🏫 Section Rooms Auto-Allocated:</strong> ${sectionRooms.length} rooms</p>
+            <p style="margin: 5px 0;"><strong>👥 Capacity:</strong> ${sectionRoomCapacity} students</p>
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
-                ${autoSelectedRooms.map(room => `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 2px solid #4caf50;">${room}</span>`).join('')}
+                ${sectionRooms.map(room => `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 2px solid #4caf50;">${room}</span>`).join('')}
             </div>
         </div>
     `;
     
-    document.getElementById('generateSection').style.display = 'block';
+    if (additionalRoomsNeeded > 0) {
+        container.innerHTML += `
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0; border: 2px solid #ffc107;">
+                <p style="margin: 5px 0; color: #856404;"><strong>⚠️ Additional Rooms Needed:</strong> ${additionalRoomsNeeded} rooms</p>
+                <p style="margin: 5px 0; color: #856404;"><strong>👥 Remaining Students:</strong> ${additionalStudents} students</p>
+                <button onclick="selectAdditionalRooms(${additionalRoomsNeeded})" style="width: 100%; padding: 12px; background: #ff9800; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 10px;">
+                    📍 Select ${additionalRoomsNeeded} Additional Room(s)
+                </button>
+            </div>
+        `;
+    } else {
+        document.getElementById('generateSection').style.display = 'block';
+    }
+}
+
+function selectAdditionalRooms(needed) {
+    const allRooms = getAllAvailableRooms();
+    const usedRooms = Array.from(selectedRooms);
+    const availableRooms = allRooms.filter(room => !usedRooms.includes(room));
+    
+    const modal = document.getElementById('roomSelectionModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalRoomList = document.getElementById('modalRoomList');
+    
+    modalTitle.textContent = `Select ${needed} Additional Room(s)`;
+    
+    const tempSelected = new Set();
+    
+    modalRoomList.innerHTML = `
+        <div id="selectionCounter" style="background: #e3f2fd; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: 600; font-size: 16px; color: #1565c0;">
+            Selected: 0 / ${needed} rooms
+        </div>
+        <div id="additionalRoomGrid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding: 15px; margin-bottom: 20px; background: #fafafa; border-radius: 8px; max-height: 400px; overflow-y: auto;"></div>
+        <button onclick="confirmAdditionalRooms()" style="width: 100%; padding: 16px; background: #4caf50; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 17px; margin-bottom: 10px;">
+            ✅ Confirm Selection
+        </button>
+        <button onclick="closeRoomModal()" style="width: 100%; padding: 16px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 17px;">
+            ❌ Close
+        </button>
+    `;
+    
+    const gridDiv = document.getElementById('additionalRoomGrid');
+    
+    availableRooms.forEach(room => {
+        const btn = document.createElement('button');
+        btn.textContent = room;
+        btn.style.cssText = 'padding: 12px 8px; border: 2px solid #e0e0e0; background: white; color: #333; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; min-height: 50px;';
+        
+        btn.onclick = () => {
+            if (tempSelected.has(room)) {
+                tempSelected.delete(room);
+                btn.style.background = 'white';
+                btn.style.borderColor = '#e0e0e0';
+            } else {
+                if (tempSelected.size < needed) {
+                    tempSelected.add(room);
+                    btn.style.background = '#4a90e2';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#4a90e2';
+                } else {
+                    alert(`⚠️ You can only select ${needed} room(s)`);
+                }
+            }
+            
+            document.getElementById('selectionCounter').textContent = `Selected: ${tempSelected.size} / ${needed} rooms`;
+        };
+        
+        gridDiv.appendChild(btn);
+    });
+    
+    window.tempSelectedRooms = tempSelected;
+    window.neededRooms = needed;
+    modal.style.display = 'block';
+}
+
+function confirmAdditionalRooms() {
+    if (window.tempSelectedRooms.size === window.neededRooms) {
+        window.tempSelectedRooms.forEach(room => selectedRooms.add(room));
+        
+        const container = document.getElementById('roomSelectionDisplay');
+        container.innerHTML += `
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <h4 style="margin-top: 0; color: #1976d2;">➕ Additional Rooms Selected:</h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    ${Array.from(window.tempSelectedRooms).map(room => `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 2px solid #2196f3;">${room}</span>`).join('')}
+                </div>
+            </div>
+        `;
+        
+        closeRoomModal();
+        document.getElementById('generateSection').style.display = 'block';
+    } else {
+        alert(`⚠️ Please select exactly ${window.neededRooms} room(s)`);
+    }
+}
+
+function closeRoomModal() {
+    document.getElementById('roomSelectionModal').style.display = 'none';
 }
 
 function startManualAssign(roomsRequired) {
