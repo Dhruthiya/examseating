@@ -413,8 +413,128 @@ function calculateRoomRequirements() {
         <p style="margin: 10px 0; font-size: 20px;"><strong>🏫 Rooms Required:</strong> ${roomsRequired}</p>
     `;
     
+    displayRoomAssignmentOptions(roomsRequired);
     document.getElementById('roomRequirementSection').style.display = 'block';
+}
+
+function displayRoomAssignmentOptions(roomsRequired) {
+    const container = document.getElementById('roomAssignmentDisplay');
+    container.innerHTML = `
+        <div id="assignmentButtons" style="margin-top: 20px;">
+            <h4 style="margin-bottom: 15px;">🎯 Choose Assignment Method:</h4>
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <button onclick="startAutoAssign(${roomsRequired})" style="flex: 1; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                    ✨ Auto Assign
+                </button>
+                <button onclick="startManualAssign(${roomsRequired})" style="flex: 1; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                    ✋ Manual Assign
+                </button>
+            </div>
+        </div>
+        <div id="roomSelectionDisplay"></div>
+    `;
+}
+
+const selectedRooms = new Set();
+
+function getAllAvailableRooms() {
+    const rooms = [];
+    const branches = ['CSE', 'ECE', 'AIML', 'EEE'];
+    const sections = {
+        'CSE': ['A', 'B', 'C', 'D', 'E', 'F'],
+        'ECE': ['A', 'B'],
+        'AIML': ['A', 'B'],
+        'EEE': ['A']
+    };
+    
+    // Add all section classrooms (all 4 years, all branches)
+    for (let year = 1; year <= 4; year++) {
+        branches.forEach(branch => {
+            sections[branch].forEach(section => {
+                rooms.push(`${branch} ${section}${year}`);
+            });
+        });
+    }
+    
+    // Add additional rooms
+    rooms.push('BSFI-1', 'BSFI-2', 'SMB (Seminar Hall-1)', 'SMB (Seminar Hall-2)', 'SMB (Seminar Hall-3)', 'SMB (Seminar Hall-4)');
+    
+    return rooms;
+}
+
+function startAutoAssign(roomsRequired) {
+    const allRooms = getAllAvailableRooms();
+    const autoSelectedRooms = allRooms.slice(0, roomsRequired);
+    
+    selectedRooms.clear();
+    autoSelectedRooms.forEach(room => selectedRooms.add(room));
+    
+    const container = document.getElementById('roomSelectionDisplay');
+    container.innerHTML = `
+        <h4 style="margin-top: 20px; color: #4caf50;">✨ Auto Assigned Rooms:</h4>
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <p style="margin: 5px 0;"><strong>🏫 Rooms Selected:</strong> ${roomsRequired} rooms</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+                ${autoSelectedRooms.map(room => `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 2px solid #4caf50;">${room}</span>`).join('')}
+            </div>
+        </div>
+    `;
+    
     document.getElementById('generateSection').style.display = 'block';
+}
+
+function startManualAssign(roomsRequired) {
+    const allRooms = getAllAvailableRooms();
+    selectedRooms.clear();
+    
+    const container = document.getElementById('roomSelectionDisplay');
+    container.innerHTML = `
+        <h4 style="margin-top: 20px; color: #ff9800; font-size: 20px;">✋ Manual Assign - Select ${roomsRequired} Room(s):</h4>
+        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0; border: 2px solid #ffc107;">
+            <p id="manualCounter" style="margin: 0; color: #856404; font-weight: 600; font-size: 16px;">Selected: 0 / ${roomsRequired} rooms</p>
+        </div>
+        <div id="roomGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 450px; overflow-y: auto; padding: 15px; margin: 15px 0; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0;"></div>
+    `;
+    
+    const gridDiv = document.getElementById('roomGrid');
+    
+    allRooms.forEach(room => {
+        const btn = document.createElement('button');
+        btn.textContent = room;
+        btn.style.cssText = 'padding: 15px 10px; border: 2px solid #e0e0e0; background: white; color: #333; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; min-height: 55px;';
+        
+        btn.onclick = () => {
+            if (selectedRooms.has(room)) {
+                selectedRooms.delete(room);
+                btn.style.background = 'white';
+                btn.style.color = '#333';
+                btn.style.borderColor = '#e0e0e0';
+            } else {
+                if (selectedRooms.size < roomsRequired) {
+                    selectedRooms.add(room);
+                    btn.style.background = 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)';
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#ff9800';
+                } else {
+                    alert(`⚠️ You can only select ${roomsRequired} room(s)`);
+                }
+            }
+            
+            const counter = document.getElementById('manualCounter');
+            counter.textContent = `Selected: ${selectedRooms.size} / ${roomsRequired} rooms`;
+            counter.parentElement.style.background = selectedRooms.size === roomsRequired ? '#c8e6c9' : '#fff3cd';
+            counter.parentElement.style.borderColor = selectedRooms.size === roomsRequired ? '#4caf50' : '#ffc107';
+            counter.style.color = selectedRooms.size === roomsRequired ? '#2e7d32' : '#856404';
+            
+            if (selectedRooms.size === roomsRequired) {
+                document.getElementById('generateSection').style.display = 'block';
+            } else {
+                document.getElementById('generateSection').style.display = 'none';
+            }
+        };
+        
+        gridDiv.appendChild(btn);
+    });
 }
 
 function checkRoomCalculation() {
