@@ -168,8 +168,12 @@ function saveData() {
         return;
     }
     
-    // Data is already saved to Firebase during generation
-    alert('✅ Data is already saved in Firebase! Students can search their seats.');
+    // Save to localStorage
+    localStorage.setItem('seatingData', seatingData);
+    localStorage.setItem('overflowData', overflowData);
+    localStorage.setItem('sections', sections);
+    
+    alert('✅ Data saved successfully! Students can now search their seats.');
 }
 
 function downloadPDF() {

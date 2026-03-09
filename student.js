@@ -12,7 +12,7 @@ async function searchSeat() {
         return;
     }
     
-    // Search Firebase only
+    // Try Firebase first
     console.log('Searching Firebase for roll:', searchInput);
     const firebaseResult = await searchStudentByRoll(searchInput);
     
@@ -22,8 +22,88 @@ async function searchSeat() {
         return;
     }
     
-    // Not found in Firebase
-    showError('Roll number not found. Please check and try again or contact admin.');
+    // Fallback to localStorage if Firebase fails
+    console.log('Firebase search failed, trying localStorage...');
+    const seatingData = localStorage.getItem('seatingData');
+    const overflowData = localStorage.getItem('overflowData');
+    
+    if (!seatingData) {
+        showError('No seating arrangement found. Please contact admin to generate seating first.');
+        return;
+    }
+    
+    const allSeats = JSON.parse(seatingData);
+    const overflow = overflowData ? JSON.parse(overflowData) : [];
+    
+    // Search in main seating
+    let found = false;
+    for (let seat of allSeats) {
+        // Check seat1
+        if (seat.seat1 && seat.seat1.rollNo.toLowerCase().endsWith(searchInput)) {
+            displayResult(
+                seat.seat1.rollNo,
+                seat.seat1.section,
+                seat.classroom,
+                seat.bench,
+                seat.seat2 ? `${seat.seat2.rollNo} (${seat.seat2.section})` : 'No partner',
+                seat.seat1.subject
+            );
+            found = true;
+            break;
+        }
+        // Check seat2
+        if (seat.seat2 && seat.seat2.rollNo.toLowerCase().endsWith(searchInput)) {
+            displayResult(
+                seat.seat2.rollNo,
+                seat.seat2.section,
+                seat.classroom,
+                seat.bench,
+                `${seat.seat1.rollNo} (${seat.seat1.section})`,
+                seat.seat2.subject
+            );
+            found = true;
+            break;
+        }
+    }
+    
+    // Search in overflow if not found
+    if (!found && overflow.length > 0) {
+        // Need to reconstruct overflow seating
+        const overflowSeating = allocateOverflowSeats(overflow);
+        
+        for (let seat of overflowSeating) {
+            // Check seat1
+            if (seat.seat1 && seat.seat1.rollNo.toLowerCase().endsWith(searchInput)) {
+                displayResult(
+                    seat.seat1.rollNo,
+                    seat.seat1.section,
+                    `Overflow-Class-${seat.classroom}`,
+                    seat.bench,
+                    seat.seat2 ? `${seat.seat2.rollNo} (${seat.seat2.section})` : 'No partner',
+                    seat.seat1.subject
+                );
+                found = true;
+                break;
+            }
+            // Check seat2
+            if (seat.seat2 && seat.seat2.rollNo.toLowerCase().endsWith(searchInput)) {
+                displayResult(
+                    seat.seat2.rollNo,
+                    seat.seat2.section,
+                    `Overflow-Class-${seat.classroom}`,
+                    seat.bench,
+                    `${seat.seat1.rollNo} (${seat.seat1.section})`,
+                    seat.seat2.subject
+                );
+                found = true;
+                break;
+            }
+        }
+    }
+    
+    if (!found) {
+        showError('Roll number not found. Please check and try again.');
+    }
 }
 
 function allocateOverflowSeats(students) {
@@ -63,15 +143,30 @@ function allocateOverflowSeats(students) {
 }
 
 function displayResult(data) {
-    // Firebase format only
-    const rollNo = data.rollNumber || data.fullRollNo;
-    const section = data.section;
-    const classroom = data.classroom;
-    const bench = data.bench;
-    const partner = data.partner;
-    const subject = data.subject;
-    const examDate = data.examDate;
-    const examTime = data.examTime;
+    // Handle both Firebase format and localStorage format
+    let rollNo, section, classroom, bench, partner, subject, examDate, examTime;
+    
+    if (data.rollNumber) {
+        // Firebase format
+        rollNo = data.rollNumber;
+        section = data.section;
+        classroom = data.classroom;
+        bench = data.bench;
+        partner = data.partner;
+        subject = data.subject;
+        examDate = data.examDate;
+        examTime = data.examTime;
+    } else {
+        // localStorage format (old)
+        rollNo = data;
+        section = arguments[1];
+        classroom = arguments[2];
+        bench = arguments[3];
+        partner = arguments[4];
+        subject = arguments[5];
+        examDate = localStorage.getItem('examDate') || 'Not set';
+        examTime = localStorage.getItem('examTime') || 'Not set';
+    }
     
     // Calculate row and column based on bench number
     const column = Math.ceil(bench / 8);

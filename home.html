@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Exam Seating System</title>
+    <title>Login - Exam Seat Arrangement System</title>
     <link rel="stylesheet" href="home.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -12,39 +12,28 @@
         <div class="home-box">
             <div class="home-header">
                 <h1>🎓</h1>
-                <h2>Exam Seating System</h2>
-                <p style="color: #718096; font-size: 1.05em; margin-top: 12px; font-weight: 500;">Admin Dashboard Access</p>
+                <h2>Exam Seat Arrangement System</h2>
+                <p>Sign in with Google to continue</p>
             </div>
             
             <!-- Google Sign-In -->
-            <div class="google-signin-section">
-                <div class="signin-label">
-                    <span>🔐 Sign in with Google</span>
-                </div>
+            <div style="margin: 20px 0;">
                 <div id="g_id_onload"
                      data-client_id="80284631535-bf0igbecrqsfgsbkiqe77plh0jtuhdok.apps.googleusercontent.com"
                      data-callback="handleGoogleLogin">
                 </div>
-                <div class="google-button-wrapper">
-                    <div class="g_id_signin" 
-                         data-type="standard"
-                         data-size="large"
-                         data-theme="filled_blue"
-                         data-text="signin_with"
-                         data-shape="pill"
-                         data-logo_alignment="left">
-                    </div>
+                <div class="g_id_signin" 
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="sign_in_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left"
+                     style="display: flex; justify-content: center;">
                 </div>
             </div>
             
-            <div id="errorMsg"></div>
-            
-            <div class="info-box">
-                <p>
-                    <strong>ℹ️ Note:</strong> Only authorized admin accounts can access the dashboard. 
-                    Students can search their seats without login.
-                </p>
-            </div>
+            <div id="errorMsg" style="display: none; margin-top: 15px; padding: 10px; background: #fff5f5; color: #e53e3e; border-radius: 8px; text-align: center;"></div>
         </div>
     </div>
     

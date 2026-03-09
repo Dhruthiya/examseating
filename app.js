@@ -250,7 +250,12 @@ function generateArrangement(enableShuffle = false) {
         finalSections = shuffledSections;
     }
     
-    // Store in sessionStorage for results page display only
+    localStorage.setItem('seatingData', JSON.stringify(result.seated));
+    localStorage.setItem('overflowData', JSON.stringify(result.overflow));
+    localStorage.setItem('sections', JSON.stringify(finalSections));
+    localStorage.setItem('examDate', examDate);
+    localStorage.setItem('examTime', examTime);
+    
     sessionStorage.setItem('seatingData', JSON.stringify(result.seated));
     sessionStorage.setItem('overflowData', JSON.stringify(result.overflow));
     sessionStorage.setItem('sections', JSON.stringify(finalSections));
