@@ -233,6 +233,35 @@ function downloadPDF() {
 }
 
 function shuffleArrangement() {
+    if (typeof clearAllArrangements === 'undefined' || typeof saveSeatingArrangement === 'undefined') {
+        console.error('❌ Firebase functions not loaded');
+        alert('⚠️ Firebase not connected. Shuffle displayed but not saved.');
+        
+        // Still do the visual shuffle
+        const sections = JSON.parse(sessionStorage.getItem('sections'));
+        const shuffled = [...sections].sort(() => Math.random() - 0.5);
+        
+        const classroomMapping = {};
+        sections.forEach((sec, idx) => {
+            classroomMapping[sec.name] = shuffled[idx].name;
+        });
+        
+        seatingData.forEach(seat => {
+            seat.classroom = classroomMapping[seat.classroom];
+        });
+        
+        sessionStorage.setItem('seatingData', JSON.stringify(seatingData));
+        sessionStorage.setItem('sections', JSON.stringify(shuffled));
+        
+        displayClassroomTables(seatingData, shuffled);
+        
+        if (overflowData.length > 0) {
+            const additionalClassrooms = Math.ceil(overflowData.length / 64);
+            displayOverflow(overflowData, additionalClassrooms);
+        }
+        return;
+    }
+    
     const sections = JSON.parse(sessionStorage.getItem('sections'));
     const shuffled = [...sections].sort(() => Math.random() - 0.5);
     
@@ -252,6 +281,7 @@ function shuffleArrangement() {
     console.log('💾 Saving shuffled arrangement to Firebase...');
     
     clearAllArrangements().then(() => {
+        console.log('✅ Old data cleared');
         const savePromises = seatingData.map(seat => {
             if (seat.seat1) {
                 const rollNumber = seat.seat1.rollNo.toLowerCase();
