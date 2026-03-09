@@ -35,7 +35,6 @@ async function searchSeat(rollNumber) {
             document.getElementById('subject').textContent = data.subject || 'N/A';
             document.getElementById('examDate').textContent = data.examDate || 'N/A';
             document.getElementById('examTime').textContent = data.examTime || 'N/A';
-            document.getElementById('section').textContent = data.section || 'N/A';
             document.getElementById('classroom').textContent = data.classroom || 'N/A';
             document.getElementById('bench').textContent = bench || 'N/A';
             document.getElementById('row').textContent = row;
