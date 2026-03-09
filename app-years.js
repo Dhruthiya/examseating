@@ -385,9 +385,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const displayDate = document.getElementById('displayDate');
     
     examDateInput?.addEventListener('change', function() {
+            checkRoomCalculation();
         if (this.value) {
             const [year, month, day] = this.value.split('-');
             displayDate.textContent = `Selected: ${day}/${month}/${year}`;
         }
     });
+});
+
+function calculateRoomRequirements() {
+    let totalStudents = 0;
+    
+    selectedYears.forEach(year => {
+        const currentBranchData = yearData[year];
+        if (yearBranchSelections[year]) {
+            Object.keys(yearBranchSelections[year]).forEach(branch => {
+                const branchTotal = currentBranchData[branch].students.reduce((a, b) => a + b, 0);
+                totalStudents += branchTotal;
+            });
+        }
+    });
+    
+    const roomsRequired = Math.ceil(totalStudents / 56); // 28 benches × 2 students
+    
+    document.getElementById('roomRequirementText').innerHTML = `
+        <p style="margin: 10px 0; font-size: 20px;"><strong>👥 Total Students:</strong> ${totalStudents}</p>
+        <p style="margin: 10px 0; font-size: 20px;"><strong>🏫 Rooms Required:</strong> ${roomsRequired}</p>
+    `;
+    
+    document.getElementById('roomRequirementSection').style.display = 'block';
+    document.getElementById('generateSection').style.display = 'block';
+}
+
+function checkRoomCalculation() {
+    const examDate = document.getElementById('examDate')?.value;
+    const examTime = document.getElementById('examTime')?.value;
+    
+    if (examDate && examTime && selectedYears.size > 0) {
+        calculateRoomRequirements();
+    }
+}
+
+// Update event listeners
+const examTimeInput = document.getElementById('examTime');
+examTimeInput?.addEventListener('change', function() {
+    checkRoomCalculation();
 });
