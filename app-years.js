@@ -486,14 +486,9 @@ function generateArrangement() {
 
 document.addEventListener('DOMContentLoaded', function() {
     const examDateInput = document.getElementById('examDate');
-    const displayDate = document.getElementById('displayDate');
     
     examDateInput?.addEventListener('change', function() {
             checkRoomCalculation();
-        if (this.value) {
-            const [year, month, day] = this.value.split('-');
-            displayDate.textContent = `Selected: ${day}/${month}/${year}`;
-        }
     });
 });
 
