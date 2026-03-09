@@ -12,34 +12,35 @@
         <div class="home-box">
             <div class="home-header">
                 <h1>🎓</h1>
-                <h2>Exam Seat Arrangement System</h2>
-                <p style="color: #718096; font-size: 1.1em; margin-top: 10px;">Admin Dashboard Access</p>
+                <h2>Exam Seating System</h2>
+                <p style="color: #718096; font-size: 1.05em; margin-top: 12px; font-weight: 500;">Admin Dashboard Access</p>
             </div>
             
             <!-- Google Sign-In -->
-            <div style="margin: 40px 0; text-align: center;">
-                <p style="color: #2d3748; font-weight: 600; margin-bottom: 20px; font-size: 1.1em;">
-                    🔐 Sign in with your authorized Google account
-                </p>
+            <div class="google-signin-section">
+                <div class="signin-label">
+                    <span>🔐 Sign in with Google</span>
+                </div>
                 <div id="g_id_onload"
                      data-client_id="80284631535-bf0igbecrqsfgsbkiqe77plh0jtuhdok.apps.googleusercontent.com"
                      data-callback="handleGoogleLogin">
                 </div>
-                <div class="g_id_signin" 
-                     data-type="standard"
-                     data-size="large"
-                     data-theme="filled_blue"
-                     data-text="signin_with"
-                     data-shape="pill"
-                     data-logo_alignment="left"
-                     style="display: flex; justify-content: center;">
+                <div class="google-button-wrapper">
+                    <div class="g_id_signin" 
+                         data-type="standard"
+                         data-size="large"
+                         data-theme="filled_blue"
+                         data-text="signin_with"
+                         data-shape="pill"
+                         data-logo_alignment="left">
+                    </div>
                 </div>
             </div>
             
-            <div id="errorMsg" style="display: none; margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%); color: #c53030; border-radius: 12px; text-align: center; font-weight: 600; border: 2px solid #fc8181; box-shadow: 0 4px 12px rgba(197, 48, 48, 0.2);"></div>
+            <div id="errorMsg"></div>
             
-            <div style="margin-top: 40px; padding: 20px; background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%); border-radius: 12px; border: 2px solid #4fd1c5;">
-                <p style="margin: 0; color: #234e52; font-size: 0.95em; line-height: 1.6;">
+            <div class="info-box">
+                <p>
                     <strong>ℹ️ Note:</strong> Only authorized admin accounts can access the dashboard. 
                     Students can search their seats without login.
                 </p>
