@@ -780,11 +780,20 @@ examTimeInput?.addEventListener('change', function() {
 });
 
 function generateRollNumbers(branch, year) {
+    // Use ROLL_NUMBERS from rollnumbers.js
+    const yearMap = { 1: '1st Year', 2: '2nd Year', 3: '3rd Year', 4: '4th Year' };
+    const yearPrefix = yearMap[year];
     const rolls = [];
-    const yearCode = year === 1 ? '25' : year === 2 ? '24' : year === 3 ? '23' : '22';
-    const lateralYearCode = year === 2 ? '25' : year === 3 ? '24' : year === 4 ? '23' : null;
-    const branchCodes = { CSE: '05', ECE: '55', AIML: '66', EEE: '44' };
-    const code = branchCodes[branch];
+    
+    // Get all sections for this year and branch
+    Object.keys(ROLL_NUMBERS).forEach(key => {
+        if (key.startsWith(yearPrefix) && key.includes(branch)) {
+            rolls.push(...ROLL_NUMBERS[key]);
+        }
+    });
+    
+    return rolls;
+}
     
     if (branch === 'CSE' && year === 1) {
         // Year 1 CSE: 385 students (no laterals)
