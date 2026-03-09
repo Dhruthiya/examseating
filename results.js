@@ -180,24 +180,26 @@ function saveData() {
     
     clearAllArrangements().then(() => {
         console.log('✅ Old data cleared');
-        const savePromises = seatingData.map(seat => {
-            const rollNumber = seat.seat1.rollNo.toLowerCase();
-            
-            console.log('Saving:', seat.seat1.rollNo, '→ rollNumber:', rollNumber);
-            
-            return saveSeatingArrangement({
-                rollNumber: rollNumber,
-                fullRollNo: seat.seat1.rollNo,
-                section: seat.seat1.section,
-                classroom: seat.classroom,
-                bench: seat.bench,
-                partner: seat.seat2 ? seat.seat2.rollNo : null,
-                partnerSection: seat.seat2 ? seat.seat2.section : null,
-                subject: seat.seat1.subject,
-                examDate: examDate,
-                examTime: examTime
+        const savePromises = seatingData
+            .filter(seat => seat.seat1 && seat.seat1.rollNo)
+            .map(seat => {
+                const rollNumber = seat.seat1.rollNo.toLowerCase();
+                
+                console.log('Saving:', seat.seat1.rollNo, '→ rollNumber:', rollNumber);
+                
+                return saveSeatingArrangement({
+                    rollNumber: rollNumber,
+                    fullRollNo: seat.seat1.rollNo,
+                    section: seat.seat1.section,
+                    classroom: seat.classroom,
+                    bench: seat.bench,
+                    partner: seat.seat2 ? seat.seat2.rollNo : null,
+                    partnerSection: seat.seat2 ? seat.seat2.section : null,
+                    subject: seat.seat1.subject,
+                    examDate: examDate,
+                    examTime: examTime
+                });
             });
-        });
         
         return Promise.all(savePromises);
     }).then(() => {
