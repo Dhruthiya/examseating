@@ -414,13 +414,17 @@ function generateArrangement() {
     });
     
     console.log(`📊 Total benches used: ${allBenches.length}`);
-    console.log(`📊 Rooms needed: ${Math.ceil(allBenches.length / 28)}`);
+    const actualRoomsNeeded = Math.ceil(allBenches.length / 28);
+    console.log(`📊 Rooms needed: ${actualRoomsNeeded}`);
     
-    // PHASE 3: Distribute benches across rooms
+    // PHASE 3: Distribute benches across rooms (only use rooms actually needed)
+    const rooms = Array.from(selectedRooms);
+    const roomsToUse = rooms.slice(0, actualRoomsNeeded);
+    const sections = roomsToUse.map(room => ({ name: room }));
     const seatingResult = [];
     let benchIndex = 0;
     
-    rooms.forEach(room => {
+    roomsToUse.forEach(room => {
         for (let bench = 1; bench <= 28 && benchIndex < allBenches.length; bench++) {
             const benchData = allBenches[benchIndex++];
             seatingResult.push({
