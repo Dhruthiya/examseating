@@ -248,6 +248,39 @@ function shuffleArrangement() {
     sessionStorage.setItem('seatingData', JSON.stringify(seatingData));
     sessionStorage.setItem('sections', JSON.stringify(shuffled));
     
+    // Save shuffled data to Firebase
+    console.log('💾 Saving shuffled arrangement to Firebase...');
+    
+    clearAllArrangements().then(() => {
+        const savePromises = seatingData.map(seat => {
+            if (seat.seat1) {
+                const rollMatch = seat.seat1.rollNo.match(/([0-9a-z]{4})$/i);
+                const rollNumber = rollMatch ? rollMatch[1].toLowerCase() : seat.seat1.rollNo;
+                
+                return saveSeatingArrangement({
+                    rollNumber: rollNumber,
+                    fullRollNo: seat.seat1.rollNo,
+                    section: seat.seat1.section,
+                    classroom: seat.classroom,
+                    bench: seat.bench,
+                    partner: seat.seat2 ? seat.seat2.rollNo : null,
+                    partnerSection: seat.seat2 ? seat.seat2.section : null,
+                    subject: seat.seat1.subject,
+                    examDate: sessionStorage.getItem('examDate'),
+                    examTime: sessionStorage.getItem('examTime')
+                });
+            }
+        });
+        
+        return Promise.all(savePromises);
+    }).then(() => {
+        console.log('✅ Shuffled data saved to Firebase');
+        alert('✅ Shuffled arrangement saved successfully!');
+    }).catch(error => {
+        console.error('❌ Error saving shuffle:', error);
+        alert('⚠️ Shuffle displayed but Firebase save failed: ' + error.message);
+    });
+    
     displayClassroomTables(seatingData, shuffled);
     
     if (overflowData.length > 0) {
