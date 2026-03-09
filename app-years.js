@@ -351,6 +351,7 @@ function generateArrangement() {
     
     // Allocate seats
     const rooms = Array.from(selectedRooms);
+    const sections = rooms.map(room => ({ name: room }));
     const seatingResult = [];
     let studentIndex = 0;
     
@@ -372,6 +373,8 @@ function generateArrangement() {
     
     // Save to sessionStorage for results page
     sessionStorage.setItem('seatingData', JSON.stringify(seatingResult));
+    sessionStorage.setItem('sections', JSON.stringify(sections));
+    sessionStorage.setItem('overflowData', JSON.stringify([]));
     sessionStorage.setItem('examDate', formattedDate);
     sessionStorage.setItem('examTime', examTime);
     
