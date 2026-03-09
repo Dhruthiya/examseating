@@ -351,25 +351,84 @@ function generateArrangement() {
         }
     });
     
-    // Allocate seats
+    // Allocate seats with subject constraint
     const rooms = Array.from(selectedRooms);
     const sections = rooms.map(room => ({ name: room }));
+    
+    // Group students by subject
+    const studentsBySubject = {};
+    students.forEach(student => {
+        if (!studentsBySubject[student.subject]) {
+            studentsBySubject[student.subject] = [];
+        }
+        studentsBySubject[student.subject].push(student);
+    });
+    
+    const subjects = Object.keys(studentsBySubject);
+    console.log('Subjects:', subjects);
+    console.log('Students per subject:', Object.keys(studentsBySubject).map(s => `${s}: ${studentsBySubject[s].length}`));
+    
+    const seated = new Set();
+    const allBenches = [];
+    let benchCounter = 1;
+    
+    // PHASE 1: Pair students with DIFFERENT subjects
+    for (let i = 0; i < subjects.length; i++) {
+        for (let j = i + 1; j < subjects.length; j++) {
+            const subject1 = subjects[i];
+            const subject2 = subjects[j];
+            const list1 = studentsBySubject[subject1];
+            const list2 = studentsBySubject[subject2];
+            
+            while (list1.length > 0 && list2.length > 0) {
+                const student1 = list1.shift();
+                const student2 = list2.shift();
+                
+                if (student1.section === student2.section) {
+                    list2.unshift(student2);
+                    if (list2.length === 1) break;
+                    continue;
+                }
+                
+                allBenches.push({
+                    seat1: student1,
+                    seat2: student2
+                });
+                seated.add(student1.rollNo);
+                seated.add(student2.rollNo);
+                console.log(`✅ Paired: ${student1.rollNo} (${student1.subject}) with ${student2.rollNo} (${student2.subject})`);
+            }
+        }
+    }
+    
+    // PHASE 2: Place remaining students ALONE
+    students.forEach(student => {
+        if (!seated.has(student.rollNo)) {
+            allBenches.push({
+                seat1: student,
+                seat2: null
+            });
+            seated.add(student.rollNo);
+            console.log(`⚠️ Alone: ${student.rollNo} (${student.subject}) - no different subject partner available`);
+        }
+    });
+    
+    console.log(`📊 Total benches used: ${allBenches.length}`);
+    console.log(`📊 Rooms needed: ${Math.ceil(allBenches.length / 28)}`);
+    
+    // PHASE 3: Distribute benches across rooms
     const seatingResult = [];
-    let studentIndex = 0;
+    let benchIndex = 0;
     
     rooms.forEach(room => {
-        for (let bench = 1; bench <= 28; bench++) {
-            const seat1 = students[studentIndex++];
-            const seat2 = students[studentIndex++];
-            
-            if (seat1) {
-                seatingResult.push({
-                    classroom: room,
-                    bench: bench,
-                    seat1: seat1,
-                    seat2: seat2 || null
-                });
-            }
+        for (let bench = 1; bench <= 28 && benchIndex < allBenches.length; bench++) {
+            const benchData = allBenches[benchIndex++];
+            seatingResult.push({
+                classroom: room,
+                bench: bench,
+                seat1: benchData.seat1,
+                seat2: benchData.seat2
+            });
         }
     });
     
