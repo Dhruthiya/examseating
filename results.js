@@ -181,8 +181,9 @@ function saveData() {
     clearAllArrangements().then(() => {
         console.log('✅ Old data cleared');
         const savePromises = seatingData.map(seat => {
-            const rollMatch = seat.seat1.rollNo.match(/([0-9a-z]{4})$/i);
-            const rollNumber = rollMatch ? rollMatch[1].toLowerCase() : seat.seat1.rollNo;
+            const rollNumber = seat.seat1.rollNo.toLowerCase();
+            
+            console.log('Saving:', seat.seat1.rollNo, '→ rollNumber:', rollNumber);
             
             return saveSeatingArrangement({
                 rollNumber: rollNumber,
@@ -303,8 +304,9 @@ function shuffleArrangement() {
         console.log('✅ Old data cleared');
         const savePromises = seatingData.map(seat => {
             if (seat.seat1) {
-                const rollMatch = seat.seat1.rollNo.match(/([0-9a-z]{4})$/i);
-                const rollNumber = rollMatch ? rollMatch[1].toLowerCase() : seat.seat1.rollNo;
+                const rollNumber = seat.seat1.rollNo.toLowerCase();
+                
+                console.log('Saving:', seat.seat1.rollNo, '→ rollNumber:', rollNumber);
                 
                 return saveSeatingArrangement({
                     rollNumber: rollNumber,
