@@ -83,12 +83,12 @@
     <script src="app-years.js"></script>
     <script>
         if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
-            window.location.href = 'home.html';
+            window.location.href = 'index.html';
         }
         
         function logout() {
             sessionStorage.clear();
-            window.location.href = 'home.html';
+            window.location.href = 'index.html';
         }
     </script>
 </body>

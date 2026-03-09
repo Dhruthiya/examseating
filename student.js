@@ -4,7 +4,7 @@ const rollNo = urlParams.get('roll');
 
 if (!rollNo) {
     alert('⚠️ No roll number provided');
-    window.location.href = 'home.html';
+    window.location.href = 'index.html';
 } else {
     searchSeat(rollNo);
 }
@@ -46,5 +46,5 @@ async function searchSeat(rollNumber) {
 }
 
 function goBack() {
-    window.location.href = 'home.html';
+    window.location.href = 'index.html';
 }
