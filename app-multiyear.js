@@ -3,23 +3,55 @@ let selectedYears = new Set();
 let yearData = {}; // {year: {mid: '', branches: Set(), subjects: {}}}
 window.isSavingData = false;
 
-const branchData = {
-    CSE: {
-        sections: ['CSE-A', 'CSE-B', 'CSE-C', 'CSE-D', 'CSE-E', 'CSE-F'],
-        subjects: ['Matrices and calculus', 'Engineering Chemistry', 'Programming for Problem solving', 'English for Enhancement skills', 'Fundamentals of Electronic Engineering']
+// Import year data from app-years.js structure
+const YEAR_SUBJECTS = {
+    '1st Year': {
+        CSE: { 'Semester 1': ['Matrices and Calculus', 'Engineering Chemistry', 'English for Skill Enhancement', 'Electronic Devices and Circuits', 'Programming for Problem Solving'],
+                'Semester 2': ['Ordinary Differential Equations and Vector Calculus', 'Advanced Engineering Physics', 'Engineering Drawing and Computer Aided Drafting', 'Basic Electrical Engineering', 'Data Structures'] },
+        ECE: { 'Semester 1': ['Matrices and Calculus', 'Programming for Problem Solving', 'English for Skill Enhancement', 'Advanced Engineering Physics', 'Engineering Drawing and Computer Aided Drafting'],
+                'Semester 2': ['Ordinary Differential Equations and Vector Calculus', 'Engineering Chemistry', 'Network Analysis and Synthesis', 'Python Programming', 'Electronic Devices and Circuits'] },
+        AIML: { 'Semester 1': ['Matrices and Calculus', 'Advanced Engineering Physics', 'Programming for Problem Solving', 'Engineering Drawing and Computer Aided Drafting', 'Basic Electrical Engineering'],
+                'Semester 2': ['Ordinary Differential Equations and Vector Calculus', 'Engineering Chemistry', 'English for Skill Enhancement', 'Fundamentals of Electronics Engineering', 'Data Structures'] },
+        EEE: { 'Semester 1': ['Matrices and Calculus', 'Engineering Chemistry', 'C and Data Structures', 'Analog Electronics', 'Electrical Circuits - I'],
+                'Semester 2': ['Ordinary Differential Equations and Vector Calculus', 'Applied Physics', 'Electromagnetic fields', 'Computer Aided Engineering Graphics', 'Electrical Circuits - II'] }
     },
-    ECE: {
-        sections: ['ECE-A', 'ECE-B'],
-        subjects: ['Matrices and calculus', 'Advanced Engineering Physics', 'Programming for Problem solving', 'English for Enhancement skills', 'Introduction to Electrical Engineering', 'Engineering Drawing and Computer Aided Drafting']
+    '2nd Year': {
+        CSE: { 'Semester 1': ['Discrete Mathematics', 'Computer Organization and Architecture', 'Object Oriented Programming through java', 'Software Engineering', 'Database Management Systems'],
+                'Semester 2': ['Computer oriented Statistical Methods', 'Operating Systems', 'Algorithm design and Analysis', 'Computer Networks', 'Machine Learning'] },
+        ECE: { 'Semester 1': ['Signals and Systems', 'Digital Logic Design', 'Control Systems', 'Data Structures', 'Numerical Methods and Complex Variables'],
+                'Semester 2': ['Probability Theory and Stochastic Processes', 'Electromagnetic Fields and Transmission Lines', 'Analog and Digital Communications', 'Electronic Circuit Analysis', 'Linear and Digital IC Applications'] },
+        AIML: { 'Semester 1': ['Mathematical and Statistical Foundations', 'Computer Organization and Architecture', 'Object Oriented Programming through Java', 'Software Engineering', 'Data base Management System'],
+                'Semester 2': ['Discrete Mathematics', 'Operating Systems', 'Algorithm Design and Analysis', 'Computer Networks', 'Artificial Intelligence'] },
+        EEE: { 'Semester 1': ['Control Systems', 'Electrical Machines - I', 'Digital Electronics', 'Power Systems - I', 'Electrical Measurements and Sensors'],
+                'Semester 2': ['Numerical Methods and Complex Variables', 'Electrical Machines - II', 'Power Systems - II', 'Power Electronics', 'Microprocessors and Microcontrollers'] }
     },
-    AIML: {
-        sections: ['AIML-A', 'AIML-B'],
-        subjects: ['Matrices and calculus', 'Advanced Engineering Physics', 'Programming for Problem solving', 'Engineering Drawing and Computer Aided Drafting', 'Basic Electrical Engineering']
+    '3rd Year': {
+        CSE: { 'Semester 1': ['Automata Theory and Compiler Design', 'Artificial Intelligence', 'DevOps', 'Professional Elective-I', 'Open Elective-I'],
+                'Semester 2': ['Cryptography and Networks Security', 'Deep Learning', 'Business Economics and Financial Analysis', 'Professional Elective-II', 'Open Elective-II'] },
+        ECE: { 'Semester 1': ['Digital Signal Processing', 'RISC and Microcontroller architectures', 'CMOS VLSI Design', 'Professional Elective-I', 'Open Elective-I'],
+                'Semester 2': ['Antenna Design and Wave Propagation', 'IoT Architectures and Protocols', 'Business Economics and Financial Analysis', 'Professional Elective-II', 'Open Elective-II'] },
+        AIML: { 'Semester 1': ['Machine Learning', 'Automata Theory and Compiler Design', 'Data Analytics', 'Professional Elective-I', 'Open Elective-I'],
+                'Semester 2': ['Natural Language Processing', 'Deep Learning', 'Business Economics and Financial Analysis', 'Professional Elective-II', 'Open Elective-II'] },
+        EEE: { 'Semester 1': ['Power Semiconductor Drives', 'Power System Protection', 'Power Electronics for Renewable Energy Systems', 'Professional Elective-I', 'Open Elective-I'],
+                'Semester 2': ['Power System Operation and Control', 'Hybrid Electric Vehicles', 'Fundamentals of Management', 'Professional Elective-II', 'Open Elective-II'] }
     },
-    EEE: {
-        sections: ['EEE-A'],
-        subjects: ['Matrices and calculus', 'Advanced Engineering Physics', 'Programming for Problem solving', 'English for Enhancement skills', 'Electrical Circuits - 1', 'Engineering Drawing and Computer Aided Drafting']
+    '4th Year': {
+        CSE: { 'Semester 1': ['Natural Language Processing', 'Cyber Security', 'Fundamentals of Management', 'Professional Elective-III', 'Professional Elective-IV'],
+                'Semester 2': ['Professional Elective-V', 'Professional Elective-VI'] },
+        ECE: { 'Semester 1': ['Microwave and Optical Communications', 'Embedded System Design', 'Fundamentals of Management for Engineers', 'Professional Elective-III', 'Professional Elective-IV'],
+                'Semester 2': ['Professional Elective-V', 'Professional Elective-VI'] },
+        AIML: { 'Semester 1': ['Reinforcement Learning', 'Generative AI', 'Fundamentals of Management for Engineers', 'Professional Elective-III', 'Professional Elective-IV'],
+                'Semester 2': ['Professional Elective-V', 'Professional Elective-VI'] },
+        EEE: { 'Semester 1': ['Smart Metering and Communication Protocols', 'EV Charging Infrastructure', 'Fundamentals of Management', 'Professional Elective-III', 'Professional Elective-IV'],
+                'Semester 2': ['Professional Elective-V', 'Professional Elective-VI'] }
     }
+};
+
+const branchData = {
+    CSE: { sections: ['CSE-A', 'CSE-B', 'CSE-C', 'CSE-D', 'CSE-E', 'CSE-F'] },
+    ECE: { sections: ['ECE-A', 'ECE-B'] },
+    AIML: { sections: ['AIML-A', 'AIML-B'] },
+    EEE: { sections: ['EEE-A'] }
 };
 
 function selectSemester(semester) {
@@ -116,13 +148,14 @@ function updateSubjects(year) {
     container.innerHTML = '';
     
     yearData[year].branches.forEach(branch => {
+        const subjects = YEAR_SUBJECTS[year][branch][selectedSemester] || [];
         const div = document.createElement('div');
         div.className = 'form-group';
         div.innerHTML = `
             <label>📖 ${branch} - Subject:</label>
             <select onchange="selectSubject('${year}', '${branch}', this.value)" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
                 <option value="">Select Subject</option>
-                ${branchData[branch].subjects.map(s => `<option value="${s}">${s}</option>`).join('')}
+                ${subjects.map(s => `<option value="${s}">${s}</option>`).join('')}
             </select>
         `;
         container.appendChild(div);
