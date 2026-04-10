@@ -54,20 +54,27 @@ const branchData = {
 };
 
 const selectedBranches = new Set();
-const selectedSubjects = {};
+let selectedSubjects = {};
 
 function selectYear(year) {
     selectedYear = year;
-    document.querySelectorAll('#generateTableView .count-btn').forEach(btn => {
-        btn.classList.remove('selected');
+    document.querySelectorAll('.count-btn').forEach(btn => {
+        if (btn.textContent === year) {
+            btn.classList.add('selected');
+        }
     });
-    event.target.classList.add('selected');
     
     // Show mid selection
     document.getElementById('midSelectionSection').style.display = 'block';
-    
-    // Reset mid and subsequent selections
-    selectedMid = '';
+}
+
+function selectMid(mid) {
+    selectedMid = mid;
+    document.querySelectorAll('#midSelectionSection .count-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    event.target.classList.add('selected');
+}
     document.querySelectorAll('#midSelectionSection .count-btn').forEach(btn => btn.classList.remove('selected'));
 }
 

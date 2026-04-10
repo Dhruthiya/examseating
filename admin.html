@@ -7,54 +7,51 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         body { margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 250px; background: #2c3e50; color: white; padding: 20px; overflow-y: auto; }
-        .sidebar h2 { margin-top: 0; font-size: 20px; }
-        .sidebar-item { padding: 12px; margin: 8px 0; background: #34495e; border-radius: 6px; cursor: pointer; transition: 0.3s; }
-        .sidebar-item:hover { background: #4a5f7f; }
-        .sidebar-item.active { background: #4a90e2; }
-        .main-content { flex: 1; overflow-y: auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        #generateTableView, #allTablesView { display: none; }
-        .table-card { background: white; border: 2px solid #e0e0e0; border-radius: 8px; padding: 15px; margin: 10px 0; cursor: pointer; transition: 0.3s; }
-        .table-card:hover { border-color: #4a90e2; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .sidebar { width: 200px; background: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar h2 { margin: 0 0 30px 0; font-size: 18px; }
+        .sidebar-btn { padding: 12px; margin: 8px 0; background: #34495e; border: none; color: white; border-radius: 6px; cursor: pointer; text-align: left; font-size: 14px; }
+        .sidebar-btn:hover { background: #4a5f7f; }
+        .sidebar-btn.logout { background: #dc3545; margin-top: auto; }
+        .main-area { flex: 1; overflow-y: auto; }
+        #allTablesView { display: none; padding: 30px; }
+        #adminContent { display: none; width: 100%; }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>🎓 Admin Panel</h2>
-        <div class="sidebar-item active" onclick="showView('generate')">➕ Generate New Table</div>
-        <div class="sidebar-item" onclick="showView('tables')">📋 All Tables</div>
-        <div class="sidebar-item" onclick="logout()" style="background: #dc3545; margin-top: 20px;">🚪 Logout</div>
-    </div>
-    
-    <div class="main-content">
-        <div id="generateTableView">
-            <div class="header">
-                <h1 style="margin: 0;">Generate New Table</h1>
+    <div id="adminContent">
+        <div class="sidebar">
+            <h2>🎓 Admin Panel</h2>
+            <button class="sidebar-btn" onclick="showView('tables')">📋 All Tables</button>
+            <button class="sidebar-btn logout" onclick="logout()">🚪 Logout</button>
+        </div>
+        
+        <div class="main-area">
+            <div id="generateView">
+                <div class="container">
+                    <h1 style="margin-bottom: 20px;">🎓 Generate Seating Arrangement</h1>
+        
+        <div class="input-section">
+            <div class="form-group">
+                <label>📅 Select Year:</label>
+                <div class="branch-count-buttons">
+                    <button type="button" class="count-btn" onclick="selectYear('1st Year')">1st Year</button>
+                    <button type="button" class="count-btn" onclick="selectYear('2nd Year')">2nd Year</button>
+                    <button type="button" class="count-btn" onclick="selectYear('3rd Year')">3rd Year</button>
+                    <button type="button" class="count-btn" onclick="selectYear('4th Year')">4th Year</button>
+                </div>
             </div>
             
-            <div class="input-section">
-            <div class="input-section">
-                <div class="form-group">
-                    <label>📅 Select Year:</label>
-                    <div class="branch-count-buttons">
-                        <button type="button" class="count-btn" onclick="selectYear('1st Year')">1st Year</button>
-                        <button type="button" class="count-btn" onclick="selectYear('2nd Year')">2nd Year</button>
-                        <button type="button" class="count-btn" onclick="selectYear('3rd Year')">3rd Year</button>
-                        <button type="button" class="count-btn" onclick="selectYear('4th Year')">4th Year</button>
-                    </div>
+            <div class="form-group" id="midSelectionSection" style="display: none;">
+                <label>📝 Select Exam Type:</label>
+                <div class="branch-count-buttons">
+                    <button type="button" class="count-btn" onclick="selectMid('Mid 1')">Mid 1</button>
+                    <button type="button" class="count-btn" onclick="selectMid('Mid 2')">Mid 2</button>
+                    <button type="button" class="count-btn" onclick="selectMid('Sem')">Sem</button>
                 </div>
-                
-                <div class="form-group" id="midSelectionSection" style="display: none;">
-                    <label>📝 Select Mid:</label>
-                    <div class="branch-count-buttons">
-                        <button type="button" class="count-btn" onclick="selectMid('Mid 1')">Mid 1</button>
-                        <button type="button" class="count-btn" onclick="selectMid('Mid 2')">Mid 2</button>
-                    </div>
-                </div>
+            </div>
 
-                <div class="form-group">
-                    <label>📚 How many branches are having the exam?</label>
+            <div class="form-group">
+                <label>📚 How many branches are having the exam?</label>
                 <div class="branch-count-buttons">
                     <button type="button" class="count-btn" onclick="selectBranchCount(1)">1</button>
                     <button type="button" class="count-btn" onclick="selectBranchCount(2)">2</button>
@@ -91,12 +88,13 @@
             </div>
             </div>
         </div>
-        
-        <div id="allTablesView">
-            <div class="header">
-                <h1 style="margin: 0;">📋 All Tables</h1>
+                </div>
             </div>
-            <div id="tablesContainer"></div>
+            
+            <div id="allTablesView">
+                <h1>📋 All Tables</h1>
+                <div id="tablesContainer" style="margin-top: 20px;"></div>
+            </div>
         </div>
     </div>
     
@@ -111,20 +109,18 @@
     <script>
         if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
             window.location.href = 'index.html';
+        } else {
+            document.getElementById('adminContent').style.display = 'flex';
         }
         
         function showView(view) {
-            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
-            
-            if (view === 'generate') {
-                document.getElementById('generateTableView').style.display = 'block';
-                document.getElementById('allTablesView').style.display = 'none';
-                event.target.classList.add('active');
-            } else if (view === 'tables') {
-                document.getElementById('generateTableView').style.display = 'none';
+            if (view === 'tables') {
+                document.getElementById('generateView').style.display = 'none';
                 document.getElementById('allTablesView').style.display = 'block';
-                event.target.classList.add('active');
                 loadAllTables();
+            } else {
+                document.getElementById('generateView').style.display = 'block';
+                document.getElementById('allTablesView').style.display = 'none';
             }
         }
         
@@ -136,11 +132,6 @@
             sessionStorage.clear();
             window.location.href = 'index.html';
         }
-        
-        // Show generate view by default
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('generateTableView').style.display = 'block';
-        });
     </script>
 </body>
 </html>

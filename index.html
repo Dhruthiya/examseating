@@ -28,6 +28,9 @@
             
             <div style="margin: 20px 0;">
                 <p style="text-align: center; color: #6c757d; margin-bottom: 12px; font-size: 13px;">Admin Login</p>
+                <button onclick="devAdminLogin()" style="width: 100%; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
+                    🔑 Dev Admin Access
+                </button>
                 <div id="g_id_onload"
                      data-client_id="80284631535-bf0igbecrqsfgsbkiqe77plh0jtuhdok.apps.googleusercontent.com"
                      data-callback="handleGoogleLogin">
@@ -48,6 +51,14 @@
     </div>
     
     <script>
+        function devAdminLogin() {
+            sessionStorage.setItem('isLoggedIn', 'true');
+            sessionStorage.setItem('userEmail', 'admin@dev.local');
+            sessionStorage.setItem('userName', 'Admin');
+            sessionStorage.setItem('userRole', 'admin');
+            window.location.href = 'admin.html';
+        }
+        
         function searchStudent() {
             const rollNo = document.getElementById('studentRollNo').value.trim().toLowerCase();
             if (!rollNo) {
