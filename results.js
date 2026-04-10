@@ -160,7 +160,7 @@ function allocateOverflowSeats(students, classrooms) {
 
 async function saveData() {
     const seatingData = JSON.parse(sessionStorage.getItem('seatingData'));
-    const tableMetadata = JSON.parse(localStorage.getItem('tableMetadata'));
+    const tableMetadata = JSON.parse(sessionStorage.getItem('tableMetadata') || localStorage.getItem('tableMetadata') || 'null');
     
     if (!seatingData || !tableMetadata) {
         alert('❌ No data to save!');
@@ -168,8 +168,13 @@ async function saveData() {
     }
     
     // Generate table name
-    const branchesStr = tableMetadata.branches.join('-');
-    const defaultTableName = `${tableMetadata.year}_${tableMetadata.mid}_${tableMetadata.examDateISO}_${tableMetadata.examTime}_${branchesStr}`;
+    const branches = Array.isArray(tableMetadata.branches) ? tableMetadata.branches : [];
+    const branchesStr = branches.length > 0 ? branches.join('-') : 'No-Branches';
+    const yearLabel = Array.isArray(tableMetadata.years) ? tableMetadata.years.join('_') : (tableMetadata.year || 'Multi-Year');
+    const midLabels = tableMetadata.yearData
+        ? Object.entries(tableMetadata.yearData).map(([year, data]) => `${year}-${data.mid || 'NoMid'}`).join('_')
+        : (tableMetadata.mid || 'NoMid');
+    const defaultTableName = `${yearLabel}_${midLabels}_${tableMetadata.examDateISO}_${tableMetadata.examTime}_${branchesStr}`;
     
     const tableName = prompt('Enter table name:', defaultTableName);
     if (!tableName) return;
@@ -187,14 +192,16 @@ async function saveData() {
         let conflictingTable = null;
         conflictSnapshot.forEach(doc => {
             const existingTable = doc.data();
-            const hasOverlap = existingTable.branches.some(b => tableMetadata.branches.includes(b));
+            const existingBranches = Array.isArray(existingTable.branches) ? existingTable.branches : [];
+            const hasOverlap = existingBranches.some(branch => branches.includes(branch));
             if (hasOverlap) {
                 conflictingTable = { id: doc.id, data: existingTable };
             }
         });
         
         if (conflictingTable) {
-            const overlappingBranches = conflictingTable.data.branches.filter(b => tableMetadata.branches.includes(b));
+            const existingBranches = Array.isArray(conflictingTable.data.branches) ? conflictingTable.data.branches : [];
+            const overlappingBranches = existingBranches.filter(branch => branches.includes(branch));
             const replace = confirm(`⚠️ ${overlappingBranches.join(', ')} already has exam at this time.\n\nExisting table: ${conflictingTable.data.tableName}\n\nDo you want to replace it?`);
             
             if (!replace) {
@@ -226,7 +233,7 @@ async function saveData() {
         console.error('❌ Firebase error:', error);
         window.isSavingData = false;
         alert('❌ Error saving table: ' + error.message);
-    });
+    }
 }
 
 function downloadPDF() {

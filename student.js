@@ -9,88 +9,106 @@ if (!rollNo) {
     searchSeat(rollNo);
 }
 
+function toLocalISODate(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function parseExamDateTime(table) {
+    if (!table.examDateISO || !table.examTime) {
+        return null;
+    }
+
+    const [year, month, day] = table.examDateISO.split('-').map(Number);
+    const [hours, minutes] = table.examTime.split(':').map(Number);
+
+    if ([year, month, day, hours, minutes].some(value => Number.isNaN(value))) {
+        return null;
+    }
+
+    return new Date(year, month - 1, day, hours, minutes, 0, 0);
+}
+
+function showNotFound(message) {
+    document.getElementById('loadingSection').style.display = 'none';
+    const notFound = document.getElementById('notFoundSection');
+    notFound.style.display = 'block';
+    notFound.innerHTML = `<p style="text-align: center;">${message}</p><button onclick="goBack()" style="margin-top: 20px;">🏠 Go Back</button>`;
+}
+
+function findSeat(table, rollLower) {
+    return (table.seatingData || []).find(seat =>
+        (seat.seat1 && seat.seat1.rollNo.toLowerCase() === rollLower) ||
+        (seat.seat2 && seat.seat2.rollNo.toLowerCase() === rollLower)
+    );
+}
+
+function showSeatResult(table, seat, rollLower) {
+    const studentSeat = seat.seat1 && seat.seat1.rollNo.toLowerCase() === rollLower ? seat.seat1 : seat.seat2;
+
+    document.getElementById('loadingSection').style.display = 'none';
+    document.getElementById('resultSection').style.display = 'block';
+    document.getElementById('rollNumber').textContent = studentSeat.rollNo;
+    document.getElementById('subject').textContent = studentSeat.subject || 'N/A';
+    document.getElementById('examDate').textContent = table.examDate || table.examDateISO || 'N/A';
+    document.getElementById('examTime').textContent = table.examTime || 'N/A';
+    document.getElementById('classroom').textContent = seat.classroom || 'N/A';
+    document.getElementById('bench').textContent = seat.bench || 'N/A';
+}
+
 async function searchSeat(rollNumber) {
     try {
         const rollLower = rollNumber.toLowerCase();
         console.log('Searching for:', rollNumber, '→', rollLower);
-        
-        // Get current date and time
         const now = new Date();
-        const todayISO = now.toISOString().split('T')[0]; // YYYY-MM-DD
-        const currentTime = now.getHours() * 60 + now.getMinutes(); // minutes since midnight
-        
-        // Get all tables for today
+        const todayISO = toLocalISODate(now);
+
         const snapshot = await db.collection('examTables')
             .where('examDateISO', '==', todayISO)
             .get();
-        
+
         if (snapshot.empty) {
-            console.log('No exams scheduled for today');
-            document.getElementById('loadingSection').style.display = 'none';
-            document.getElementById('notFoundSection').style.display = 'block';
-            document.getElementById('notFoundSection').innerHTML = '<p style="text-align: center;">No exams scheduled for today.</p><button onclick="goBack()" style="margin-top: 20px;">🏠 Go Back</button>';
+            showNotFound('No exams scheduled for today.');
             return;
         }
-        
-        // Find tables where exam is within 1 hour
-        let eligibleTables = [];
+
+        const eligibleTables = [];
         snapshot.forEach(doc => {
             const table = doc.data();
-            const [hours, minutes] = table.examTime.split(':').map(Number);
-            const examTimeMinutes = hours * 60 + minutes;
-            const timeDiff = examTimeMinutes - currentTime;
-            
-            // Check if exam is within 1 hour (0 to 60 minutes from now)
-            if (timeDiff > 0 && timeDiff <= 60) {
-                eligibleTables.push({ id: doc.id, ...table, timeDiff });
+            const examDateTime = parseExamDateTime(table);
+            if (!examDateTime) {
+                return;
+            }
+
+            const accessStart = new Date(examDateTime.getTime() - (60 * 60 * 1000));
+            if (now >= accessStart) {
+                eligibleTables.push({ id: doc.id, ...table, examDateTime });
             }
         });
-        
+
         if (eligibleTables.length === 0) {
-            console.log('No exams within 1 hour');
-            document.getElementById('loadingSection').style.display = 'none';
-            document.getElementById('notFoundSection').style.display = 'block';
-            document.getElementById('notFoundSection').innerHTML = '<p style="text-align: center;">No exams within 1 hour. Please check back later.</p><button onclick="goBack()" style="margin-top: 20px;">🏠 Go Back</button>';
+            showNotFound('Seat details are visible only from 1 hour before exam time.');
             return;
         }
-        
-        // Sort by nearest exam time
-        eligibleTables.sort((a, b) => a.timeDiff - b.timeDiff);
-        
-        // Search for student in the nearest exam
-        let found = false;
-        for (let table of eligibleTables) {
-            const seat = table.seatingData.find(s => 
-                s.seat1 && s.seat1.rollNo.toLowerCase() === rollLower
-            );
-            
+
+        eligibleTables.sort((a, b) => a.examDateTime - b.examDateTime);
+
+        for (const table of eligibleTables) {
+            const seat = findSeat(table, rollLower);
             if (seat) {
-                console.log('Found student in table:', table.tableName);
-                document.getElementById('loadingSection').style.display = 'none';
-                document.getElementById('resultSection').style.display = 'block';
-                
-                document.getElementById('rollNumber').textContent = seat.seat1.rollNo;
-                document.getElementById('subject').textContent = seat.seat1.subject || 'N/A';
-                document.getElementById('examDate').textContent = table.examDate || 'N/A';
-                document.getElementById('examTime').textContent = table.examTime || 'N/A';
-                document.getElementById('classroom').textContent = seat.classroom || 'N/A';
-                document.getElementById('bench').textContent = seat.bench || 'N/A';
-                found = true;
-                break;
+                console.log('Found student in table:', table.tableName || table.id);
+                showSeatResult(table, seat, rollLower);
+                return;
             }
         }
-        
-        if (!found) {
-            console.log('Student not found in any eligible exam');
-            document.getElementById('loadingSection').style.display = 'none';
-            document.getElementById('notFoundSection').style.display = 'block';
-        }
-        
+
+        showNotFound('No seating arrangement found for this roll number in today\'s active exam window.');
     } catch (error) {
         console.error('Error fetching seat:', error);
         alert('❌ Error fetching seat details: ' + error.message);
-        document.getElementById('loadingSection').style.display = 'none';
-        document.getElementById('notFoundSection').style.display = 'block';
+        showNotFound('Unable to load seat details right now.');
     }
 }
 
