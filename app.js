@@ -5,6 +5,7 @@ let seatingData = [];
 let overflowData = [];
 let selectedBranchCount = 0;
 let selectedYear = '';
+let selectedMid = '';
 window.isSavingData = false;
 
 const branchData = {
@@ -57,11 +58,25 @@ const selectedSubjects = {};
 
 function selectYear(year) {
     selectedYear = year;
-    document.querySelectorAll('.count-btn').forEach(btn => {
-        if (btn.textContent === year) {
-            btn.classList.add('selected');
-        }
+    document.querySelectorAll('#generateTableView .count-btn').forEach(btn => {
+        btn.classList.remove('selected');
     });
+    event.target.classList.add('selected');
+    
+    // Show mid selection
+    document.getElementById('midSelectionSection').style.display = 'block';
+    
+    // Reset mid and subsequent selections
+    selectedMid = '';
+    document.querySelectorAll('#midSelectionSection .count-btn').forEach(btn => btn.classList.remove('selected'));
+}
+
+function selectMid(mid) {
+    selectedMid = mid;
+    document.querySelectorAll('#midSelectionSection .count-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    event.target.classList.add('selected');
 }
 
 function selectBranchCount(count) {
@@ -200,6 +215,11 @@ function generateArrangement(enableShuffle = false) {
         return;
     }
     
+    if (!selectedMid) {
+        alert('⚠️ Please select a mid');
+        return;
+    }
+    
     if (selectedBranchCount === 0) {
         alert('⚠️ Please select how many branches are having the exam');
         return;
@@ -232,6 +252,7 @@ function generateArrangement(enableShuffle = false) {
     
     console.log('✅ All validations passed');
     console.log('Selected year:', selectedYear);
+    console.log('Selected mid:', selectedMid);
     console.log('Selected branches:', Array.from(selectedBranches));
     console.log('Selected subjects:', selectedSubjects);
     
@@ -286,11 +307,23 @@ function generateArrangement(enableShuffle = false) {
         finalSections = shuffledSections;
     }
     
+    // Store table metadata
+    const tableMetadata = {
+        year: selectedYear,
+        mid: selectedMid,
+        branches: Array.from(selectedBranches),
+        subjects: selectedSubjects,
+        examDate: examDate,
+        examTime: examTime,
+        examDateISO: examDateInput
+    };
+    
     localStorage.setItem('seatingData', JSON.stringify(result.seated));
     localStorage.setItem('overflowData', JSON.stringify(result.overflow));
     localStorage.setItem('sections', JSON.stringify(finalSections));
     localStorage.setItem('examDate', examDate);
     localStorage.setItem('examTime', examTime);
+    localStorage.setItem('tableMetadata', JSON.stringify(tableMetadata));
     
     sessionStorage.setItem('seatingData', JSON.stringify(result.seated));
     sessionStorage.setItem('overflowData', JSON.stringify(result.overflow));
@@ -734,4 +767,75 @@ function downloadExcel() {
     }
     
     XLSX.writeFile(wb, 'seating-arrangement.xlsx');
+}
+
+
+// Load all tables from Firebase
+async function loadAllTables() {
+    const container = document.getElementById('tablesContainer');
+    container.innerHTML = '<p>Loading tables...</p>';
+    
+    try {
+        const snapshot = await db.collection('examTables').get();
+        
+        if (snapshot.empty) {
+            container.innerHTML = '<p style="text-align: center; color: #999;">No tables generated yet.</p>';
+            return;
+        }
+        
+        // Auto-delete past tables
+        const today = new Date().setHours(0, 0, 0, 0);
+        const deletePromises = [];
+        
+        container.innerHTML = '';
+        snapshot.forEach(doc => {
+            const table = doc.data();
+            const tableDate = new Date(table.examDate).setHours(0, 0, 0, 0);
+            
+            // Delete if date has passed
+            if (tableDate < today) {
+                deletePromises.push(doc.ref.delete());
+                return;
+            }
+            
+            // Display table card
+            const card = document.createElement('div');
+            card.className = 'table-card';
+            card.innerHTML = `
+                <h3 style="margin: 0 0 10px 0;">${table.tableName}</h3>
+                <p style="margin: 5px 0;"><strong>Year:</strong> ${table.year} | <strong>Mid:</strong> ${table.mid}</p>
+                <p style="margin: 5px 0;"><strong>Branches:</strong> ${table.branches.join(', ')}</p>
+                <p style="margin: 5px 0;"><strong>Subjects:</strong> ${Object.values(table.subjects).join(', ')}</p>
+                <p style="margin: 5px 0;"><strong>Date:</strong> ${table.examDate} | <strong>Time:</strong> ${table.examTime}</p>
+                <button onclick="deleteTable('${doc.id}')" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;">🗑️ Delete</button>
+            `;
+            container.appendChild(card);
+        });
+        
+        // Execute deletions
+        if (deletePromises.length > 0) {
+            await Promise.all(deletePromises);
+            console.log(`Deleted ${deletePromises.length} past tables`);
+        }
+        
+        if (container.children.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #999;">No active tables.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading tables:', error);
+        container.innerHTML = '<p style="color: red;">Error loading tables.</p>';
+    }
+}
+
+async function deleteTable(tableId) {
+    if (!confirm('Are you sure you want to delete this table?')) return;
+    
+    try {
+        await db.collection('examTables').doc(tableId).delete();
+        alert('✅ Table deleted successfully!');
+        loadAllTables();
+    } catch (error) {
+        console.error('Error deleting table:', error);
+        alert('❌ Error deleting table: ' + error.message);
+    }
 }

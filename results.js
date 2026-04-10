@@ -158,66 +158,74 @@ function allocateOverflowSeats(students, classrooms) {
     return result;
 }
 
-function saveData() {
+async function saveData() {
     const seatingData = JSON.parse(sessionStorage.getItem('seatingData'));
-    const overflowData = sessionStorage.getItem('overflowData');
-    const sections = sessionStorage.getItem('sections');
-    const examDate = sessionStorage.getItem('examDate');
-    const examTime = sessionStorage.getItem('examTime');
+    const tableMetadata = JSON.parse(localStorage.getItem('tableMetadata'));
     
-    if (!seatingData) {
+    if (!seatingData || !tableMetadata) {
         alert('❌ No data to save!');
         return;
     }
     
-    if (typeof clearAllArrangements === 'undefined' || typeof saveSeatingArrangement === 'undefined') {
-        alert('❌ Firebase not connected!');
-        return;
-    }
+    // Generate table name
+    const branchesStr = tableMetadata.branches.join('-');
+    const defaultTableName = `${tableMetadata.year}_${tableMetadata.mid}_${tableMetadata.examDateISO}_${tableMetadata.examTime}_${branchesStr}`;
+    
+    const tableName = prompt('Enter table name:', defaultTableName);
+    if (!tableName) return;
     
     window.isSavingData = true;
-    console.log('💾 Saving data to Firebase...');
+    console.log('💾 Saving table to Firebase...');
     
-    clearAllArrangements().then(() => {
-        console.log('✅ Old data cleared');
-        const savePromises = seatingData
-            .filter(seat => seat.seat1 && seat.seat1.rollNo)
-            .map(seat => {
-                const rollNumber = seat.seat1.rollNo.toLowerCase();
-                
-                console.log('Saving:', seat.seat1.rollNo, '→ rollNumber:', rollNumber);
-                
-                return saveSeatingArrangement({
-                    rollNumber: rollNumber,
-                    fullRollNo: seat.seat1.rollNo,
-                    section: seat.seat1.section,
-                    classroom: seat.classroom,
-                    bench: seat.bench,
-                    partner: seat.seat2 ? seat.seat2.rollNo : null,
-                    partnerSection: seat.seat2 ? seat.seat2.section : null,
-                    subject: seat.seat1.subject,
-                    examDate: examDate,
-                    examTime: examTime
-                });
-            });
+    try {
+        // Check for conflicts (same date + time + overlapping branches)
+        const conflictSnapshot = await db.collection('examTables')
+            .where('examDateISO', '==', tableMetadata.examDateISO)
+            .where('examTime', '==', tableMetadata.examTime)
+            .get();
         
-        return Promise.all(savePromises);
-    }).then(() => {
-        console.log('✅ Saved to Firebase successfully');
+        let conflictingTable = null;
+        conflictSnapshot.forEach(doc => {
+            const existingTable = doc.data();
+            const hasOverlap = existingTable.branches.some(b => tableMetadata.branches.includes(b));
+            if (hasOverlap) {
+                conflictingTable = { id: doc.id, data: existingTable };
+            }
+        });
+        
+        if (conflictingTable) {
+            const overlappingBranches = conflictingTable.data.branches.filter(b => tableMetadata.branches.includes(b));
+            const replace = confirm(`⚠️ ${overlappingBranches.join(', ')} already has exam at this time.\n\nExisting table: ${conflictingTable.data.tableName}\n\nDo you want to replace it?`);
+            
+            if (!replace) {
+                window.isSavingData = false;
+                return;
+            }
+            
+            // Delete conflicting table
+            await db.collection('examTables').doc(conflictingTable.id).delete();
+            console.log('✅ Deleted conflicting table');
+        }
+        
+        // Save table metadata and seating data
+        const tableId = Date.now().toString();
+        await db.collection('examTables').doc(tableId).set({
+            tableName: tableName,
+            ...tableMetadata,
+            createdAt: new Date().toISOString(),
+            seatingData: seatingData
+        });
+        
+        console.log('✅ Table saved to Firebase');
         window.isSavingData = false;
         
-        // Save to localStorage
-        localStorage.setItem('seatingData', JSON.stringify(seatingData));
-        localStorage.setItem('overflowData', overflowData);
-        localStorage.setItem('sections', sections);
-        localStorage.setItem('examDate', examDate);
-        localStorage.setItem('examTime', examTime);
+        alert('✅ Table saved successfully! Students can check their seats 1 hour before exam.');
+        window.location.href = 'admin.html';
         
-        alert('✅ Data saved successfully! Students can now check their seating arrangement.');
-    }).catch(error => {
+    } catch (error) {
         console.error('❌ Firebase error:', error);
         window.isSavingData = false;
-        alert('❌ Error saving to Firebase: ' + error.message);
+        alert('❌ Error saving table: ' + error.message);
     });
 }
 
