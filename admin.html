@@ -6,15 +6,20 @@
     <title>Exam Seat Arrangement System</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        body { margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 200px; background: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; }
-        .sidebar h2 { margin: 0 0 30px 0; font-size: 18px; }
-        .sidebar-btn { padding: 12px; margin: 8px 0; background: #34495e; border: none; color: white; border-radius: 6px; cursor: pointer; text-align: left; font-size: 14px; }
-        .sidebar-btn:hover { background: #4a5f7f; }
-        .sidebar-btn.logout { background: #dc3545; margin-top: auto; }
-        .main-area { flex: 1; overflow-y: auto; }
-        #allTablesView { display: none; padding: 30px; }
+        body { margin: 0; display: flex; height: 100vh; overflow: hidden; font-family: Arial, sans-serif; }
+        .sidebar { width: 200px; background: white; border-right: 2px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar h2 { margin: 0 0 30px 0; font-size: 18px; color: #333; }
+        .sidebar-btn { padding: 12px; margin: 8px 0; background: #f5f5f5; border: none; color: #333; border-radius: 6px; cursor: pointer; text-align: left; font-size: 14px; transition: 0.3s; }
+        .sidebar-btn:hover { background: #e0e0e0; }
+        .sidebar-btn.logout { background: #dc3545; color: white; margin-top: auto; }
+        .sidebar-btn.logout:hover { background: #c0392b; }
+        .main-area { flex: 1; overflow-y: auto; display: flex; align-items: center; justify-content: center; background: #f9f9f9; }
         #adminContent { display: none; width: 100%; }
+        #startView { text-align: center; }
+        #generateFormView { display: none; max-width: 800px; margin: 0 auto; padding: 30px; }
+        .generate-btn { padding: 20px 40px; font-size: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+        .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        #allTablesView { display: none; padding: 30px; }
     </style>
 </head>
 <body>
@@ -26,12 +31,24 @@
         </div>
         
         <div class="main-area">
-            <div id="generateView">
+            <div id="startView">
+                <button class="generate-btn" onclick="showGenerateForm()">➕ Generate New Table</button>
+            </div>
+            
+            <div id="generateFormView">
                 <div class="container">
-                    <h1 style="margin-bottom: 20px;">🎓 Generate Seating Arrangement</h1>
+                    <h1 style="margin-bottom: 30px; text-align: center;">🎓 Generate Seating Arrangement</h1>
         
         <div class="input-section">
             <div class="form-group">
+                <label>📚 Select Semester:</label>
+                <div class="branch-count-buttons">
+                    <button type="button" class="count-btn" onclick="selectSemester('Semester 1')">Semester 1</button>
+                    <button type="button" class="count-btn" onclick="selectSemester('Semester 2')">Semester 2</button>
+                </div>
+            </div>
+            
+            <div class="form-group" id="yearSelectionSection" style="display: none;">
                 <label>📅 Select Year:</label>
                 <div class="branch-count-buttons">
                     <button type="button" class="count-btn" onclick="selectYear('1st Year')">1st Year</button>
@@ -113,13 +130,20 @@
             document.getElementById('adminContent').style.display = 'flex';
         }
         
+        function showGenerateForm() {
+            document.getElementById('startView').style.display = 'none';
+            document.getElementById('generateFormView').style.display = 'block';
+        }
+        
         function showView(view) {
             if (view === 'tables') {
-                document.getElementById('generateView').style.display = 'none';
+                document.getElementById('startView').style.display = 'none';
+                document.getElementById('generateFormView').style.display = 'none';
                 document.getElementById('allTablesView').style.display = 'block';
                 loadAllTables();
             } else {
-                document.getElementById('generateView').style.display = 'block';
+                document.getElementById('startView').style.display = 'block';
+                document.getElementById('generateFormView').style.display = 'none';
                 document.getElementById('allTablesView').style.display = 'none';
             }
         }

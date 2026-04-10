@@ -4,6 +4,7 @@
 let seatingData = [];
 let overflowData = [];
 let selectedBranchCount = 0;
+let selectedSemester = '';
 let selectedYear = '';
 let selectedMid = '';
 window.isSavingData = false;
@@ -55,6 +56,18 @@ const branchData = {
 
 const selectedBranches = new Set();
 let selectedSubjects = {};
+
+function selectSemester(semester) {
+    selectedSemester = semester;
+    document.querySelectorAll('.count-btn').forEach(btn => {
+        if (btn.textContent === semester) {
+            btn.classList.add('selected');
+        }
+    });
+    
+    // Show year selection
+    document.getElementById('yearSelectionSection').style.display = 'block';
+}
 
 function selectYear(year) {
     selectedYear = year;
