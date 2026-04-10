@@ -12,14 +12,15 @@
         .sidebar-btn { padding: 12px; margin: 8px 0; background: #f5f5f5; border: none; color: #333; border-radius: 6px; cursor: pointer; text-align: left; font-size: 14px; transition: 0.3s; }
         .sidebar-btn:hover { background: #e0e0e0; }
         .sidebar-btn.logout { background: #dc3545; color: white; margin-top: auto; }
-        .sidebar-btn.logout:hover { background: #c0392b; }
         .main-area { flex: 1; overflow-y: auto; display: flex; align-items: center; justify-content: center; background: #f9f9f9; }
         #adminContent { display: none; width: 100%; }
         #startView { text-align: center; }
-        #generateFormView { display: none; max-width: 800px; margin: 0 auto; padding: 30px; }
-        .generate-btn { padding: 20px 40px; font-size: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
-        .generate-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        #generateFormView { display: none; max-width: 900px; margin: 0 auto; padding: 30px; }
+        .generate-btn { padding: 20px 40px; font-size: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: 0.3s; }
+        .generate-btn:hover { transform: translateY(-2px); }
         #allTablesView { display: none; padding: 30px; }
+        .year-block { border: 2px solid #e0e0e0; border-radius: 10px; padding: 20px; margin: 20px 0; background: white; }
+        .year-block h3 { margin-top: 0; color: #667eea; }
     </style>
 </head>
 <body>
@@ -39,78 +40,47 @@
                 <div class="container">
                     <h1 style="margin-bottom: 30px; text-align: center;">🎓 Generate Seating Arrangement</h1>
         
-        <div class="input-section">
-            <div class="form-group">
-                <label>📚 Select Semester:</label>
-                <div class="branch-count-buttons">
-                    <button type="button" class="count-btn" onclick="selectSemester('Semester 1')">Semester 1</button>
-                    <button type="button" class="count-btn" onclick="selectSemester('Semester 2')">Semester 2</button>
-                </div>
-            </div>
-            
-            <div class="form-group" id="yearSelectionSection" style="display: none;">
-                <label>📅 Select Year:</label>
-                <div class="branch-count-buttons">
-                    <button type="button" class="count-btn" onclick="selectYear('1st Year')">1st Year</button>
-                    <button type="button" class="count-btn" onclick="selectYear('2nd Year')">2nd Year</button>
-                    <button type="button" class="count-btn" onclick="selectYear('3rd Year')">3rd Year</button>
-                    <button type="button" class="count-btn" onclick="selectYear('4th Year')">4th Year</button>
-                </div>
-            </div>
-            
-            <div class="form-group" id="midSelectionSection" style="display: none;">
-                <label>📝 Select Exam Type:</label>
-                <div class="branch-count-buttons">
-                    <button type="button" class="count-btn" onclick="selectMid('Mid 1')">Mid 1</button>
-                    <button type="button" class="count-btn" onclick="selectMid('Mid 2')">Mid 2</button>
-                    <button type="button" class="count-btn" onclick="selectMid('Sem')">Sem</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>📚 How many branches are having the exam?</label>
-                <div class="branch-count-buttons">
-                    <button type="button" class="count-btn" onclick="selectBranchCount(1)">1</button>
-                    <button type="button" class="count-btn" onclick="selectBranchCount(2)">2</button>
-                    <button type="button" class="count-btn" onclick="selectBranchCount(3)">3</button>
-                    <button type="button" class="count-btn" onclick="selectBranchCount(4)">4</button>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label>🎯 Select Branches:</label>
-                <div class="branch-buttons">
-                    <button type="button" class="branch-btn" data-branch="CSE" onclick="toggleBranch('CSE')">💻 CSE</button>
-                    <button type="button" class="branch-btn" data-branch="ECE" onclick="toggleBranch('ECE')">📡 ECE</button>
-                    <button type="button" class="branch-btn" data-branch="AIML" onclick="toggleBranch('AIML')">🤖 AIML</button>
-                    <button type="button" class="branch-btn" data-branch="EEE" onclick="toggleBranch('EEE')">⚡ EEE</button>
-                </div>
-            </div>
-            
-            <div id="subjectSelection"></div>
-            
-            <div class="form-group" id="examDetailsSection" style="display: none;">
-                <label>📅 Exam Date:</label>
-                <input type="date" id="examDate" required style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
-                <div id="displayDate" style="margin-top: 5px; color: #4a90e2; font-weight: 600;"></div>
-            </div>
-            
-            <div class="form-group" id="examTimeSection" style="display: none;">
-                <label>🕐 Exam Time:</label>
-                <input type="time" id="examTime" required style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
-            </div>
-            
-            <div id="generateButtonSection" style="text-align: center; margin-top: 20px; display: none;">
-                <button onclick="generateArrangement(false)" style="background: #4a90e2;">✨ Generate Arrangement</button>
-            </div>
-            </div>
-        </div>
+                    <div class="input-section">
+                        <div class="form-group">
+                            <label>📚 Select Semester:</label>
+                            <div class="branch-count-buttons">
+                                <button type="button" class="count-btn" onclick="selectSemester('Semester 1')">Semester 1</button>
+                                <button type="button" class="count-btn" onclick="selectSemester('Semester 2')">Semester 2</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" id="yearSelectionSection" style="display: none;">
+                            <label>📅 Select Years (can select multiple):</label>
+                            <div class="branch-count-buttons">
+                                <button type="button" class="count-btn year-btn" onclick="toggleYear('1st Year')">1st Year</button>
+                                <button type="button" class="count-btn year-btn" onclick="toggleYear('2nd Year')">2nd Year</button>
+                                <button type="button" class="count-btn year-btn" onclick="toggleYear('3rd Year')">3rd Year</button>
+                                <button type="button" class="count-btn year-btn" onclick="toggleYear('4th Year')">4th Year</button>
+                            </div>
+                        </div>
+                        
+                        <div id="yearDetailsContainer"></div>
+                        
+                        <div class="form-group" id="examDetailsSection" style="display: none;">
+                            <label>📅 Exam Date:</label>
+                            <input type="date" id="examDate" onchange="checkReady()" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
+                        </div>
+                        
+                        <div class="form-group" id="examTimeSection" style="display: none;">
+                            <label>🕐 Exam Time:</label>
+                            <input type="time" id="examTime" onchange="checkReady()" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px;">
+                        </div>
+                        
+                        <div id="generateButtonSection" style="text-align: center; margin-top: 20px; display: none;">
+                            <button onclick="generateMultiYearArrangement()" style="background: #4a90e2; padding: 12px 30px; font-size: 16px; color: white; border: none; border-radius: 8px; cursor: pointer;">✨ Generate Arrangement</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <div id="allTablesView">
                 <h1>📋 All Tables</h1>
-                <div id="tablesContainer" style="margin-top: 20px;"></div>
+                <div id="tablesContainer"></div>
             </div>
         </div>
     </div>
@@ -122,7 +92,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="app.js"></script>
+    <script src="app-multiyear.js"></script>
     <script>
         if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
             window.location.href = 'index.html';
@@ -141,10 +111,6 @@
                 document.getElementById('generateFormView').style.display = 'none';
                 document.getElementById('allTablesView').style.display = 'block';
                 loadAllTables();
-            } else {
-                document.getElementById('startView').style.display = 'block';
-                document.getElementById('generateFormView').style.display = 'none';
-                document.getElementById('allTablesView').style.display = 'none';
             }
         }
         
