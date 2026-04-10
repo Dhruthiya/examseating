@@ -194,6 +194,157 @@ function checkReady() {
         }
     }
     
+    if (allReady) {
+        calculateRoomRequirements();
+    }
+}
+
+const selectedRooms = new Set();
+
+function calculateRoomRequirements() {
+    let totalStudents = 0;
+    
+    selectedYears.forEach(year => {
+        const data = yearData[year];
+        data.branches.forEach(branch => {
+            branchData[branch].sections.forEach(sectionName => {
+                const fullSectionName = `${year} ${sectionName}`;
+                const rollNumbers = ROLL_NUMBERS[fullSectionName] || [];
+                totalStudents += rollNumbers.length;
+            });
+        });
+    });
+    
+    const roomsRequired = Math.ceil(totalStudents / 56); // 28 benches × 2 students
+    
+    const container = document.getElementById('roomAssignmentSection');
+    container.style.display = 'block';
+    container.innerHTML = `
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white;">
+            <h3 style="margin: 0 0 15px 0;">🏫 Room Assignment</h3>
+            <p style="margin: 5px 0;"><strong>Total Students:</strong> ${totalStudents}</p>
+            <p style="margin: 5px 0;"><strong>Rooms Required:</strong> ${roomsRequired}</p>
+            <div style="display: flex; gap: 15px; margin-top: 20px;">
+                <button onclick="startAutoAssign(${roomsRequired})" style="flex: 1; padding: 15px; background: white; color: #667eea; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                    ✨ Auto Assign
+                </button>
+                <button onclick="startManualAssign(${roomsRequired})" style="flex: 1; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+                    ✋ Manual Assign
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function getAllAvailableRooms() {
+    const rooms = [];
+    const branches = ['CSE', 'ECE', 'AIML', 'EEE'];
+    const sections = {
+        'CSE': ['A', 'B', 'C', 'D', 'E', 'F'],
+        'ECE': ['A', 'B'],
+        'AIML': ['A', 'B'],
+        'EEE': ['A']
+    };
+    
+    for (let year = 1; year <= 4; year++) {
+        branches.forEach(branch => {
+            sections[branch].forEach(section => {
+                rooms.push(`${branch} ${section}${year}`);
+            });
+        });
+    }
+    
+    rooms.push('BSFI-1', 'BSFI-2', 'SMB (Seminar Hall-1)', 'SMB (Seminar Hall-2)', 'SMB (Seminar Hall-3)', 'SMB (Seminar Hall-4)');
+    
+    return rooms;
+}
+
+function startAutoAssign(roomsRequired) {
+    const allRooms = getAllAvailableRooms();
+    const autoSelectedRooms = allRooms.slice(0, roomsRequired);
+    
+    selectedRooms.clear();
+    autoSelectedRooms.forEach(room => selectedRooms.add(room));
+    
+    const container = document.getElementById('roomSelectionDisplay');
+    container.innerHTML = `
+        <h4 style="margin-top: 20px; color: #4caf50;">✨ Auto Assigned Rooms:</h4>
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <p style="margin: 5px 0;"><strong>🏫 Rooms Selected:</strong> ${roomsRequired} rooms</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+                ${autoSelectedRooms.map(room => `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 2px solid #4caf50;">${room}</span>`).join('')}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('generateSection').style.display = 'block';
+}
+
+function startManualAssign(roomsRequired) {
+    const allRooms = getAllAvailableRooms();
+    selectedRooms.clear();
+    
+    const container = document.getElementById('roomSelectionDisplay');
+    container.innerHTML = `
+        <h4 style="margin-top: 20px; color: #ff9800;">✋ Manual Assign - Select ${roomsRequired} Room(s):</h4>
+        <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <p id="manualCounter" style="margin: 0; color: #856404; font-weight: 600;">Selected: 0 / ${roomsRequired} rooms</p>
+        </div>
+        <div id="roomGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 450px; overflow-y: auto; padding: 15px; background: #fafafa; border-radius: 8px;"></div>
+    `;
+    
+    const gridDiv = document.getElementById('roomGrid');
+    
+    allRooms.forEach(room => {
+        const btn = document.createElement('button');
+        btn.textContent = room;
+        btn.style.cssText = 'padding: 15px 10px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;';
+        
+        btn.onclick = () => {
+            if (selectedRooms.has(room)) {
+                selectedRooms.delete(room);
+                btn.style.background = 'white';
+                btn.style.borderColor = '#e0e0e0';
+            } else {
+                if (selectedRooms.size < roomsRequired) {
+                    selectedRooms.add(room);
+                    btn.style.background = '#ff9800';
+                    btn.style.color = 'white';
+                } else {
+                    alert(`⚠️ You can only select ${roomsRequired} room(s)`);
+                }
+            }
+            
+            document.getElementById('manualCounter').textContent = `Selected: ${selectedRooms.size} / ${roomsRequired} rooms`;
+            document.getElementById('generateSection').style.display = selectedRooms.size === roomsRequired ? 'block' : 'none';
+        };
+        
+        gridDiv.appendChild(btn);
+    });
+}
+
+function checkReady() {
+    const examDate = document.getElementById('examDate')?.value;
+    const examTime = document.getElementById('examTime')?.value;
+    
+    let allReady = selectedSemester && selectedYears.size > 0 && examDate && examTime;
+    
+    if (allReady) {
+        for (let year of selectedYears) {
+            const data = yearData[year];
+            if (!data.mid || data.branches.size === 0) {
+                allReady = false;
+                break;
+            }
+            for (let branch of data.branches) {
+                if (!data.subjects[branch]) {
+                    allReady = false;
+                    break;
+                }
+            }
+        }
+    }
+    
     document.getElementById('generateButtonSection').style.display = allReady ? 'block' : 'none';
 }
 
@@ -262,7 +413,8 @@ function allocateSeatsToClassrooms(students, sections) {
     const seated = [];
     const overflow = [];
     
-    let currentRoom = 301;
+    const roomsArray = Array.from(selectedRooms);
+    let currentRoomIndex = 0;
     let currentBench = 1;
     
     for (let i = 0; i < students.length; i += 2) {
@@ -270,12 +422,18 @@ function allocateSeatsToClassrooms(students, sections) {
         const student2 = students[i + 1] || null;
         
         if (currentBench > BENCHES_PER_CLASSROOM) {
-            currentRoom++;
+            currentRoomIndex++;
             currentBench = 1;
         }
         
+        if (currentRoomIndex >= roomsArray.length) {
+            overflow.push(student1);
+            if (student2) overflow.push(student2);
+            continue;
+        }
+        
         seated.push({
-            classroom: currentRoom,
+            classroom: roomsArray[currentRoomIndex],
             bench: currentBench,
             seat1: student1,
             seat2: student2
