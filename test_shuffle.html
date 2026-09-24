@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Shuffle Logic</title>
+</head>
+<body>
+    <h1>Testing Shuffle & Constraints</h1>
+    <button onclick="runTest()">Run Test</button>
+    <pre id="output"></pre>
+
+    <script src="app.js"></script>
+    <script>
+        function runTest() {
+            const output = document.getElementById('output');
+            let log = '';
+            
+            // Setup test data
+            selectedBranchCount = 2;
+            selectedBranches.clear();
+            selectedBranches.add('CSE');
+            selectedBranches.add('ECE');
+            selectedSubjects['CSE'] = 'Matrices and calculus';
+            selectedSubjects['ECE'] = 'Advanced Engineering Physics';
+            
+            const sections = [];
+            const students = [];
+            
+            // Generate test students
+            ['CSE', 'ECE'].forEach(branch => {
+                const subject = selectedSubjects[branch];
+                const rollNumbers = generateRollNumbers(branch);
+                
+                branchData[branch].sections.forEach((sectionName, idx) => {
+                    sections.push({ name: sectionName, subject: subject });
+                    const numStudents = branchData[branch].students[idx];
+                    const startIdx = branchData[branch].sections.slice(0, idx).reduce((sum, _, i) => sum + branchData[branch].students[i], 0);
+                    
+                    for (let j = 0; j < numStudents; j++) {
+                        students.push({
+                            rollNo: rollNumbers[startIdx + j],
+                            name: rollNumbers[startIdx + j],
+                            section: sectionName,
+                            subject: subject
+                        });
+                    }
+                });
+            });
+            
+            log += `Total Students: ${students.length}\n`;
+            log += `Total Sections: ${sections.length}\n\n`;
+            
+            // Run allocation twice to test shuffle
+            log += '=== FIRST GENERATION ===\n';
+            const result1 = allocateSeatsToClassrooms(students, sections);
+            const shuffled1 = shuffleArray(sections);
+            const mapping1 = {};
+            sections.forEach((sec, idx) => {
+                mapping1[sec.name] = shuffled1[idx].name;
+            });
+            result1.seated.forEach(seat => {
+                seat.classroom = mapping1[seat.classroom];
+            });
+            
+            log += checkConstraints(result1.seated, shuffled1);
+            log += `Classroom assignments: ${shuffled1.map(s => s.name).join(', ')}\n\n`;
+            
+            // Second generation
+            log += '=== SECOND GENERATION (SHUFFLED) ===\n';
+            const result2 = allocateSeatsToClassrooms(students, sections);
+            const shuffled2 = shuffleArray(sections);
+            const mapping2 = {};
+            sections.forEach((sec, idx) => {
+                mapping2[sec.name] = shuffled2[idx].name;
+            });
+            result2.seated.forEach(seat => {
+                seat.classroom = mapping2[seat.classroom];
+            });
+            
+            log += checkConstraints(result2.seated, shuffled2);
+            log += `Classroom assignments: ${shuffled2.map(s => s.name).join(', ')}\n\n`;
+            
+            // Compare
+            log += '=== COMPARISON ===\n';
+            const same = shuffled1.every((s, i) => s.name === shuffled2[i].name);
+            log += `Classrooms shuffled: ${!same ? '✓ YES' : '✗ NO (same order)'}\n`;
+            
+            // Check bench consistency
+            const bench1 = result1.seated.slice(0, 5).map(s => `${s.seat1.rollNo}-${s.seat2?.rollNo}`);
+            const bench2 = result2.seated.slice(0, 5).map(s => `${s.seat1.rollNo}-${s.seat2?.rollNo}`);
+            log += `Bench pairs consistent: ${JSON.stringify(bench1) === JSON.stringify(bench2) ? '✓ YES' : '✗ NO'}\n`;
+            
+            output.textContent = log;
+        }
+        
+        function checkConstraints(seated, sections) {
+            let log = '';
+            let violations = 0;
+            
+            // Check constraints
+            seated.forEach((seat, idx) => {
+                const classroom = sections.find(s => s.name === seat.classroom);
+                
+                // Constraint 1: Student not in own classroom
+                if (seat.seat1.section === seat.classroom) {
+                    violations++;
+                    if (violations <= 3) log += `❌ Violation: ${seat.seat1.rollNo} in own classroom ${seat.classroom}\n`;
+                }
+                if (seat.seat2 && seat.seat2.section === seat.classroom) {
+                    violations++;
+                    if (violations <= 3) log += `❌ Violation: ${seat.seat2.rollNo} in own classroom ${seat.classroom}\n`;
+                }
+                
+                // Constraint 2: Different subjects
+                if (seat.seat2 && seat.seat1.subject === seat.seat2.subject) {
+                    violations++;
+                    if (violations <= 3) log += `❌ Violation: Same subject at bench ${seat.bench} in ${seat.classroom}\n`;
+                }
+                
+                // Constraint 3: Different branches (preferred)
+                if (seat.seat2) {
+                    const b1 = seat.seat1.section.split('-')[0];
+                    const b2 = seat.seat2.section.split('-')[0];
+                    if (b1 === b2 && violations <= 3) {
+                        log += `⚠️  Same branch at bench ${seat.bench}: ${b1}\n`;
+                    }
+                }
+            });
+            
+            if (violations === 0) {
+                log += '✓ All constraints satisfied!\n';
+            } else {
+                log += `\n❌ Total violations: ${violations}\n`;
+            }
+            
+            log += `Seated: ${seated.length * 2} students in ${seated.length} benches\n`;
+            return log;
+        }
+    </script>
+</body>
+</html>
