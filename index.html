@@ -28,21 +28,19 @@
             
             <div style="margin: 20px 0;">
                 <p style="text-align: center; color: #6c757d; margin-bottom: 12px; font-size: 13px;">Admin Login</p>
-                <button onclick="devAdminLogin()" style="width: 100%; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
-                    🔑 Dev Admin Access
-                </button>
                 <div id="g_id_onload"
-                     data-client_id="80284631535-bf0igbecrqsfgsbkiqe77plh0jtuhdok.apps.googleusercontent.com"
-                     data-callback="handleGoogleLogin">
+                     data-client_id="361381758196-dkfkah9p0rdri0hrp1gbgdtnqqrkmul5.apps.googleusercontent.com"
+                     data-callback="handleGoogleLogin"
+                     data-auto_prompt="false">
                 </div>
-                <div class="g_id_signin" 
+                <div class="g_id_signin"
                      data-type="standard"
                      data-size="large"
                      data-theme="outline"
                      data-text="sign_in_with"
                      data-shape="rectangular"
                      data-logo_alignment="left"
-                     style="display: flex; justify-content: center;">
+                     data-width="320">
                 </div>
             </div>
             
@@ -50,15 +48,8 @@
         </div>
     </div>
     
+    <script src="login.js"></script>
     <script>
-        function devAdminLogin() {
-            sessionStorage.setItem('isLoggedIn', 'true');
-            sessionStorage.setItem('userEmail', 'admin@dev.local');
-            sessionStorage.setItem('userName', 'Admin');
-            sessionStorage.setItem('userRole', 'admin');
-            window.location.href = 'admin.html';
-        }
-        
         function searchStudent() {
             const rollNo = document.getElementById('studentRollNo').value.trim().toLowerCase();
             if (!rollNo) {
@@ -75,9 +66,6 @@
         });
     </script>
     
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config-simple.js"></script>
-    <script src="login.js"></script>
+
 </body>
 </html>

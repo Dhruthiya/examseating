@@ -7,14 +7,21 @@ async function handleGoogleLogin(response) {
     console.log('🔐 Google login attempt:', email);
     
     // Check if admin
-    if (email === 'navyachinta31545@gmail.com') {
+    const adminEmails = [
+        'navyachinta31545@gmail.com',
+        'sriyajami08@gmail.com',
+        'kamalhasiniemani@gmail.com',
+        'aasifa.zaina@gmail.com',
+        'dhruthiyagillala@gmail.com'
+    ];
+    if (adminEmails.includes(email)) {
         console.log('✅ Admin login successful');
         sessionStorage.setItem('isLoggedIn', 'true');
         sessionStorage.setItem('userEmail', email);
         sessionStorage.setItem('userName', userInfo.name);
         sessionStorage.setItem('userPicture', userInfo.picture);
         sessionStorage.setItem('userRole', 'admin');
-        window.location.href = 'index-years.html';
+        window.location.href = 'admin.html';
         return;
     }
     
