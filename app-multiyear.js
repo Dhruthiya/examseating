@@ -718,6 +718,18 @@ function generateMultiYearArrangement() {
     const { allStudents, branchSelections } = buildStudentAndSectionData();
     const result = allocateSeatsToClassrooms(allStudents);
 
+    // Shuffle room assignments (same as shuffle button) so rooms differ every generation
+    const sections = result.sections;
+    const shuffled = [...sections].sort(() => Math.random() - 0.5);
+    const classroomMapping = {};
+    sections.forEach((sec, idx) => {
+        classroomMapping[sec.name] = shuffled[idx].name;
+    });
+    result.seated.forEach(seat => {
+        seat.classroom = classroomMapping[seat.classroom];
+    });
+    result.sections = shuffled;
+
     const serializedYearData = JSON.parse(JSON.stringify(yearData, (key, value) => {
         return value instanceof Set ? Array.from(value) : value;
     }));
