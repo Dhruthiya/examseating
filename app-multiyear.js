@@ -57,8 +57,6 @@ const branchData = {
 
 const selectedRooms = new Set();
 
-const STUDENT_DATABASE_STORAGE_KEY = 'examSeatingStudentSections';
-
 function applyStudentSectionRecords(records) {
     records.forEach(record => {
         if (!record || !record.year || !record.branch || !record.section || !Array.isArray(record.students)) return;
@@ -68,19 +66,9 @@ function applyStudentSectionRecords(records) {
 }
 
 async function loadStudentDatabaseOverrides() {
-    try {
-        const cached = JSON.parse(localStorage.getItem(STUDENT_DATABASE_STORAGE_KEY) || '[]');
-        if (Array.isArray(cached)) applyStudentSectionRecords(cached);
-    } catch (error) {
-        console.warn('Ignoring invalid cached student database:', error);
-    }
-
     const snapshot = await db.collection('studentSections').get();
     const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    if (records.length) {
-        applyStudentSectionRecords(records);
-        localStorage.setItem(STUDENT_DATABASE_STORAGE_KEY, JSON.stringify(records));
-    }
+    applyStudentSectionRecords(records);
     return records;
 }
 
@@ -437,14 +425,14 @@ function calculateRoomRequirements() {
             <p style="margin: 5px 0;"><strong>Rooms Required:</strong> ${roomRequirementContext.roomsRequired}</p>
             <p style="margin: 5px 0;"><strong>Already Allotted At This Time:</strong> ${occupiedCount} room(s)</p>
             <p style="margin: 5px 0;"><strong>Available For Selection:</strong> ${availableRoomCount} room(s)</p>
-            <div style="display: flex; gap: 15px; margin-top: 20px;">
+            ${roomRequirementContext.totalStudents > 0 ? `<div style="display: flex; gap: 15px; margin-top: 20px;">
                 <button onclick="startAutoAssign(${roomRequirementContext.roomsRequired})" style="flex: 1; padding: 15px; background: white; color: #667eea; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
                     ✨ Auto Assign
                 </button>
                 <button onclick="startManualAssign(${roomRequirementContext.roomsRequired})" style="flex: 1; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
                     ✋ Manual Assign
                 </button>
-            </div>
+            </div>` : '<p style="margin-top:20px;"><strong>No saved students for this selection.</strong> Upload and save the roster from the Edit section first.</p>'}
         </div>
     `;
 
@@ -756,6 +744,11 @@ function generateMultiYearArrangement() {
 
     if (selectedRooms.size !== roomRequirementContext.roomsRequired) {
         alert(`⚠️ Please assign exactly ${roomRequirementContext.roomsRequired} room(s) before generating.`);
+        return;
+    }
+
+    if (roomRequirementContext.totalStudents === 0) {
+        alert('No students are saved for the selected year and branches. Upload and save the roster from the Edit section first.');
         return;
     }
 

@@ -40,6 +40,9 @@ async function initEditView() {
             <input type="file" id="editFileInput" accept=".csv,.xlsx,.xls"
                    style="display:none;" onchange="handleEditFile(event)">
             <div id="editFileStatus" style="margin-top:14px;font-size:13px;color:#6b7280;"></div>
+            <button id="saveAllStudentDataButton" type="button" class="sidebar-btn"
+                    style="display:none;margin-top:16px;background:#15803d;color:white;"
+                    onclick="saveAllEditDataToSystem()">💾 Save All and Replace Student Data</button>
         </div>
 
         <!-- Year Selection (shown after upload) -->
@@ -188,6 +191,7 @@ function processEditFile(file) {
     }
 
     setEditStatus(`⏳ Parsing "${file.name}"...`, '#6b7280');
+    setSaveAllButtonVisible(false);
 
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -262,6 +266,7 @@ function processRows(rows, filename) {
     }
     editParsedData = sortEditStudentRecords(parsed);
     setEditStatus(`✅ Parsed ${parsed.length} students from "${filename}"`, 'green');
+    setSaveAllButtonVisible(true);
     renderYearSelection();
 }
 
@@ -331,6 +336,7 @@ function processWorkbook(workbook, filename) {
     editParsedData = sortEditStudentRecords(allStudents);
     const sheetCount = workbook.SheetNames.length;
     setEditStatus(`✅ Parsed ${allStudents.length} students from ${sheetCount} sheets in "${filename}"`, 'green');
+    setSaveAllButtonVisible(true);
     renderYearSelection();
 }
 
@@ -722,10 +728,6 @@ async function saveEditDataToRollNumbers() {
         try {
             await db.collection('studentSections').doc(encodeURIComponent(key)).set(record);
             ROLL_NUMBERS[key] = students.map(student => student.rollNo);
-            const cached = JSON.parse(localStorage.getItem(STUDENT_DATABASE_STORAGE_KEY) || '[]');
-            const withoutSection = cached.filter(item => `${item.year} ${item.branch} ${item.section}` !== key);
-            withoutSection.push(record);
-            localStorage.setItem(STUDENT_DATABASE_STORAGE_KEY, JSON.stringify(withoutSection));
             alert(`✅ Saved ${students.length} student records under "${key}". They are available for seating generation.`);
         } catch (error) {
             alert(`Could not save student records: ${error.message}`);
@@ -739,4 +741,85 @@ async function saveEditDataToRollNumbers() {
 function setEditStatus(msg, color) {
     const el = document.getElementById('editFileStatus');
     if (el) { el.textContent = msg; el.style.color = color; }
+}
+
+function setSaveAllButtonVisible(visible) {
+    const button = document.getElementById('saveAllStudentDataButton');
+    if (button) button.style.display = visible ? 'inline-block' : 'none';
+}
+
+async function saveAllEditDataToSystem() {
+    const groupedStudents = new Map();
+    for (const student of editParsedData) {
+        if (!student.rollNo || !student.year || !student.branch || !student.section) {
+            alert('The uploaded file contains a student without a roll number, year, branch, or section. Fix the row before saving.');
+            return;
+        }
+        const key = `${student.year} ${student.branch} ${student.section}`;
+        if (!groupedStudents.has(key)) {
+            groupedStudents.set(key, {
+                key,
+                year: student.year,
+                branch: student.branch,
+                section: student.section,
+                students: []
+            });
+        }
+        groupedStudents.get(key).students.push({
+            rollNo: String(student.rollNo).trim().toLowerCase(),
+            name: String(student.name || '').trim()
+        });
+    }
+
+    if (!groupedStudents.size) {
+        alert('Upload a student file before saving the database.');
+        return;
+    }
+
+    const records = Array.from(groupedStudents.values(), record => ({
+        ...record,
+        updatedAt: new Date().toISOString()
+    }));
+    const studentCount = records.reduce((total, record) => total + record.students.length, 0);
+    if (!confirm(`Replace the saved student database with ${studentCount} students across ${records.length} sections? Saved sections missing from this upload will be removed.`)) {
+        return;
+    }
+
+    const collection = db.collection('studentSections');
+    try {
+        const existing = await collection.get();
+        const replacementIds = new Set(records.map(record => encodeURIComponent(record.key)));
+        const operations = existing.docs
+            .filter(doc => !replacementIds.has(doc.id))
+            .map(doc => ({ type: 'delete', ref: doc.ref }))
+            .concat(records.map(record => ({
+                type: 'set',
+                ref: collection.doc(encodeURIComponent(record.key)),
+                data: {
+                    year: record.year,
+                    branch: record.branch,
+                    section: record.section,
+                    students: record.students,
+                    updatedAt: record.updatedAt
+                }
+            })));
+
+        for (let start = 0; start < operations.length; start += 450) {
+            const batch = db.batch();
+            operations.slice(start, start + 450).forEach(operation => {
+                if (operation.type === 'delete') batch.delete(operation.ref);
+                else batch.set(operation.ref, operation.data);
+            });
+            await batch.commit();
+        }
+
+        Object.keys(ROLL_NUMBERS).forEach(key => delete ROLL_NUMBERS[key]);
+        applyStudentSectionRecords(records);
+        setSaveAllButtonVisible(false);
+        setEditStatus(`✅ Replaced the student database with ${studentCount} students across ${records.length} sections.`, 'green');
+        alert('✅ Student database replaced. Seating generation will now use this uploaded roster.');
+    } catch (error) {
+        setEditStatus(`Could not replace the student database: ${error.message}`, 'red');
+        alert(`Could not replace the student database: ${error.message}`);
+    }
 }
