@@ -24,6 +24,7 @@
         .generate-btn { padding: 20px 40px; font-size: 18px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: 0.3s; }
         .generate-btn:hover { transform: translateY(-2px); }
         #allTablesView { display: none; }
+        #editView { display: none; width: 100%; }
         .year-block { border: 2px solid #e0e0e0; border-radius: 10px; padding: 20px; margin: 20px 0; background: white; }
         .year-block h3 { margin-top: 0; color: #667eea; }
     </style>
@@ -33,6 +34,7 @@
         <div class="sidebar">
             <h2>🎓 Admin Panel</h2>
             <button class="sidebar-btn" onclick="showView('tables')">📋 All Tables</button>
+            <button class="sidebar-btn" onclick="showView('edit')">✏️ Edit</button>
             <div class="sidebar-section-title">Generated Tables</div>
             <div id="sidebarTablesList" class="sidebar-tables-list"></div>
             <button class="sidebar-btn logout" onclick="logout()">🚪 Logout</button>
@@ -92,6 +94,7 @@
                 <h1>📋 All Tables</h1>
                 <div id="tablesContainer"></div>
             </div>
+            <div id="editView"></div>
         </div>
     </div>
 
@@ -110,25 +113,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="app-multiyear.js"></script>
+    <script src="edit-data.js"></script>
     <script>
         if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
             window.location.href = 'index.html';
         } else {
             document.getElementById('adminContent').style.display = 'flex';
-            loadTablesSidebar();
+            window.studentDatabaseReady = loadStudentDatabaseOverrides()
+                .catch(error => console.error('Could not load saved student records:', error))
+                .finally(() => loadTablesSidebar());
         }
         
-        function showGenerateForm() {
+        async function showGenerateForm() {
+            await window.studentDatabaseReady;
             document.getElementById('startView').style.display = 'none';
             document.getElementById('generateFormView').style.display = 'block';
+            document.getElementById('allTablesView').style.display = 'none';
+            document.getElementById('editView').style.display = 'none';
         }
         
         function showView(view, selectedTableId = null) {
             if (view === 'tables') {
                 document.getElementById('startView').style.display = 'none';
                 document.getElementById('generateFormView').style.display = 'none';
+                document.getElementById('editView').style.display = 'none';
                 document.getElementById('allTablesView').style.display = 'block';
                 loadAllTables(selectedTableId);
+            } else if (view === 'edit') {
+                document.getElementById('startView').style.display = 'none';
+                document.getElementById('generateFormView').style.display = 'none';
+                document.getElementById('allTablesView').style.display = 'none';
+                document.getElementById('editView').style.display = 'block';
+                initEditView();
             }
         }
         

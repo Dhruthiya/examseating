@@ -57,6 +57,33 @@ const branchData = {
 
 const selectedRooms = new Set();
 
+const STUDENT_DATABASE_STORAGE_KEY = 'examSeatingStudentSections';
+
+function applyStudentSectionRecords(records) {
+    records.forEach(record => {
+        if (!record || !record.year || !record.branch || !record.section || !Array.isArray(record.students)) return;
+        const key = `${record.year} ${record.branch} ${record.section}`;
+        ROLL_NUMBERS[key] = record.students.map(student => String(student.rollNo || '').trim().toLowerCase()).filter(Boolean);
+    });
+}
+
+async function loadStudentDatabaseOverrides() {
+    try {
+        const cached = JSON.parse(localStorage.getItem(STUDENT_DATABASE_STORAGE_KEY) || '[]');
+        if (Array.isArray(cached)) applyStudentSectionRecords(cached);
+    } catch (error) {
+        console.warn('Ignoring invalid cached student database:', error);
+    }
+
+    const snapshot = await db.collection('studentSections').get();
+    const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (records.length) {
+        applyStudentSectionRecords(records);
+        localStorage.setItem(STUDENT_DATABASE_STORAGE_KEY, JSON.stringify(records));
+    }
+    return records;
+}
+
 function toLocalISODate(date = new Date()) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -67,7 +94,26 @@ function toLocalISODate(date = new Date()) {
 function getRollNumbersForYearSection(year, sectionName) {
     const normalizedSection = sectionName.replace('-', ' ');
     const fullSectionName = `${year} ${normalizedSection}`;
-    return ROLL_NUMBERS[fullSectionName] || [];
+    if (Array.isArray(ROLL_NUMBERS[fullSectionName])) {
+        return ROLL_NUMBERS[fullSectionName];
+    }
+
+    // Older roll-number data stores single-section branches such as EEE
+    // without an explicit "A" suffix (for example, "2nd Year EEE").
+    const sectionParts = normalizedSection.trim().split(/\s+/);
+    const section = sectionParts.pop();
+    if (section === 'A') {
+        const legacyKey = `${year} ${sectionParts.join(' ')}`;
+        if (Array.isArray(ROLL_NUMBERS[legacyKey])) {
+            return ROLL_NUMBERS[legacyKey];
+        }
+    }
+
+    // Tolerate harmless differences in case, spacing, and hyphenation.
+    const compactKey = value => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const wantedKey = compactKey(fullSectionName);
+    const matchingKey = Object.keys(ROLL_NUMBERS).find(key => compactKey(key) === wantedKey);
+    return matchingKey && Array.isArray(ROLL_NUMBERS[matchingKey]) ? ROLL_NUMBERS[matchingKey] : [];
 }
 
 function getYearSuffix(year) {
