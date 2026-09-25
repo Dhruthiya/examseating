@@ -43,6 +43,9 @@ async function initEditView() {
             <button id="saveAllStudentDataButton" type="button" class="sidebar-btn"
                     style="display:none;margin-top:16px;background:#15803d;color:white;"
                     onclick="saveAllEditDataToSystem()">💾 Save All and Replace Student Data</button>
+            <button id="generateFromUploadButton" type="button" class="sidebar-btn"
+                    style="display:none;margin-top:10px;background:#4a90e2;color:white;"
+                    onclick="saveRosterAndOpenGenerator()">🎓 Generate Table</button>
         </div>
 
         <!-- Year Selection (shown after upload) -->
@@ -192,6 +195,7 @@ function processEditFile(file) {
 
     setEditStatus(`⏳ Parsing "${file.name}"...`, '#6b7280');
     setSaveAllButtonVisible(false);
+    setGenerateFromUploadButtonVisible(false);
 
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -267,6 +271,7 @@ function processRows(rows, filename) {
     editParsedData = sortEditStudentRecords(parsed);
     setEditStatus(`✅ Parsed ${parsed.length} students from "${filename}"`, 'green');
     setSaveAllButtonVisible(true);
+    setGenerateFromUploadButtonVisible(true);
     renderYearSelection();
 }
 
@@ -337,6 +342,7 @@ function processWorkbook(workbook, filename) {
     const sheetCount = workbook.SheetNames.length;
     setEditStatus(`✅ Parsed ${allStudents.length} students from ${sheetCount} sheets in "${filename}"`, 'green');
     setSaveAllButtonVisible(true);
+    setGenerateFromUploadButtonVisible(true);
     renderYearSelection();
 }
 
@@ -753,7 +759,7 @@ async function saveAllEditDataToSystem() {
     for (const student of editParsedData) {
         if (!student.rollNo || !student.year || !student.branch || !student.section) {
             alert('The uploaded file contains a student without a roll number, year, branch, or section. Fix the row before saving.');
-            return;
+            return false;
         }
         const key = `${student.year} ${student.branch} ${student.section}`;
         if (!groupedStudents.has(key)) {
@@ -773,7 +779,7 @@ async function saveAllEditDataToSystem() {
 
     if (!groupedStudents.size) {
         alert('Upload a student file before saving the database.');
-        return;
+        return false;
     }
 
     const records = Array.from(groupedStudents.values(), record => ({
@@ -782,7 +788,7 @@ async function saveAllEditDataToSystem() {
     }));
     const studentCount = records.reduce((total, record) => total + record.students.length, 0);
     if (!confirm(`Replace the saved student database with ${studentCount} students across ${records.length} sections? Saved sections missing from this upload will be removed.`)) {
-        return;
+        return false;
     }
 
     const collection = db.collection('studentSections');
@@ -818,8 +824,20 @@ async function saveAllEditDataToSystem() {
         setSaveAllButtonVisible(false);
         setEditStatus(`✅ Replaced the student database with ${studentCount} students across ${records.length} sections.`, 'green');
         alert('✅ Student database replaced. Seating generation will now use this uploaded roster.');
+        return true;
     } catch (error) {
         setEditStatus(`Could not replace the student database: ${error.message}`, 'red');
         alert(`Could not replace the student database: ${error.message}`);
+        return false;
     }
+}
+
+function setGenerateFromUploadButtonVisible(visible) {
+    const button = document.getElementById('generateFromUploadButton');
+    if (button) button.style.display = visible ? 'inline-block' : 'none';
+}
+
+async function saveRosterAndOpenGenerator() {
+    const saved = await saveAllEditDataToSystem();
+    if (saved) await showGenerateForm();
 }
