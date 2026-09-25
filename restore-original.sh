@@ -12,4 +12,4 @@ echo "🚀 Deploying to Vercel..."
 
 vercel --prod --yes
 
-echo "✅ Done! Check: https://examseating-silk.vercel.app"
+echo "✅ Done! Check: https://examseating-three.vercel.app"

@@ -73,43 +73,20 @@ Open: http://localhost:8080/home.html
 
 ---
 
-## 🚀 Deploy to Netlify:
-
-### Option 1: Drag & Drop (Easiest)
-
-1. Go to https://app.netlify.com/drop
-2. Drag the entire `/home/cse/examseating` folder
-3. Get URL like: `https://random-name.netlify.app`
-
-### Option 2: GitHub (Recommended)
+## 🚀 Deploy to Vercel
 
 ```bash
-cd /home/cse/examseating
-git add .
-git commit -m "Add Firebase integration"
-git push
+npm i -g vercel
+vercel login
+cd /home/cse/exam_sriya/examseating
+vercel --prod
 ```
 
-Then:
-1. Go to https://app.netlify.com/
-2. Click "Add new site" → "Import from Git"
-3. Connect GitHub
-4. Select your repo
-5. Click "Deploy"
+The production site is [https://examseating-three.vercel.app](https://examseating-three.vercel.app).
+Add this exact origin to the Google OAuth client's **Authorized JavaScript origins**:
 
-### Step 7: Update Google OAuth
-
-After deployment, add your Netlify URL to Google Cloud Console:
-
-**Authorized JavaScript origins:**
-```
-https://your-site.netlify.app
-```
-
-**Authorized redirect URIs:**
-```
-https://your-site.netlify.app
-https://your-site.netlify.app/home.html
+```text
+https://examseating-three.vercel.app
 ```
 
 ---
@@ -165,7 +142,7 @@ service cloud.firestore {
 - [ ] Enable Firestore Database
 - [ ] Copy Firebase config to `firebase-config.js`
 - [ ] Test locally (generate + search)
-- [ ] Deploy to Netlify
+- [ ] Deploy to Vercel
 - [ ] Update Google OAuth URLs
 - [ ] Test live website
 

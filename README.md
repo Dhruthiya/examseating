@@ -19,20 +19,20 @@
    - Authorized JavaScript origins:
      ```
      http://localhost:8080
-     https://your-vercel-app.vercel.app
+     https://examseating-three.vercel.app
      ```
    - Authorized redirect URIs:
      ```
      http://localhost:8080
-     https://your-vercel-app.vercel.app
+     https://examseating-three.vercel.app
      ```
 7. Copy the **Client ID**
 
 ### 2. ~~Update home.html~~ ✅ Already configured!
 
-Your Google OAuth Client ID is already set up in `home.html`:
+Your Google OAuth Client ID is already set up in `index.html`:
 ```
-80284631535-bf0igbecrqsfgsbkiqe77plh0jtuhdok.apps.googleusercontent.com
+361381758196-dkfkah9p0rdri0hrp1gbgdtnqqrkmul5.apps.googleusercontent.com
 ```
 
 ### 3. Deploy to Vercel
@@ -51,9 +51,7 @@ vercel --prod
 
 ### 4. Update OAuth URLs
 
-After deployment, add your Vercel URL to Google Cloud Console:
-- Authorized JavaScript origins: `https://your-app.vercel.app`
-- Authorized redirect URIs: `https://your-app.vercel.app`
+The production URL is https://examseating-three.vercel.app. Add it under Authorized JavaScript origins in the Google OAuth client settings.
 
 ## 📋 Features
 
