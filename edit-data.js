@@ -286,15 +286,8 @@ function processWorkbook(workbook, filename) {
         const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
         if (!rows || rows.length < 6) return;
 
-        // Detect year from title rows (rows 0-3)
-        let year = '2nd Year'; // default
-        for (let r = 0; r < 4; r++) {
-            const cell = String(rows[r][0] || '').toUpperCase();
-            if (cell.includes('I B.TECH') && !cell.includes('II B.TECH') && !cell.includes('III B.TECH')) year = '1st Year';
-            else if (cell.includes('II B.TECH') && !cell.includes('III B.TECH')) year = '2nd Year';
-            else if (cell.includes('III B.TECH')) year = '3rd Year';
-            else if (cell.includes('IV B.TECH') || cell.includes('4TH')) year = '4th Year';
-        }
+        // Year labels may be merged into any header cell, so inspect all header cells.
+        const year = detectWorkbookYear(rows);
 
         // Parse branch and section from sheet name
         // e.g. "EEE" → branch=EEE, section=A
@@ -315,7 +308,7 @@ function processWorkbook(workbook, filename) {
                     sno: allStudents.length + 1,
                     rollNo: leftRoll.toLowerCase(),
                     name: leftName || '—',
-                    year, branch, section
+                    year: year || guessYearFromRoll(leftRoll) || 'Unknown Year', branch, section
                 });
             }
 
@@ -327,7 +320,7 @@ function processWorkbook(workbook, filename) {
                     sno: allStudents.length + 1,
                     rollNo: rightRoll.toLowerCase(),
                     name: rightName || '—',
-                    year, branch, section
+                    year: year || guessYearFromRoll(rightRoll) || 'Unknown Year', branch, section
                 });
             }
         }
@@ -344,6 +337,20 @@ function processWorkbook(workbook, filename) {
     setSaveAllButtonVisible(true);
     setGenerateFromUploadButtonVisible(true);
     renderYearSelection();
+}
+
+function detectWorkbookYear(rows) {
+    const header = rows.slice(0, 6).flat().map(value =>
+        String(value || '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim()
+    ).join(' ');
+    const patterns = [
+        [/\b(?:IV|4TH)\s*(?:B\s*TECH|YEAR)\b|\bB\s*TECH\s*(?:IV|4TH)\b/, '4th Year'],
+        [/\b(?:III|3RD)\s*(?:B\s*TECH|YEAR)\b|\bB\s*TECH\s*(?:III|3RD)\b/, '3rd Year'],
+        [/\b(?:II|2ND)\s*(?:B\s*TECH|YEAR)\b|\bB\s*TECH\s*(?:II|2ND)\b/, '2nd Year'],
+        [/\b(?:I|1ST)\s*(?:B\s*TECH|YEAR)\b|\bB\s*TECH\s*(?:I|1ST)\b/, '1st Year']
+    ];
+    const match = patterns.find(([pattern]) => pattern.test(header));
+    return match ? match[1] : '';
 }
 
 /**
@@ -492,8 +499,9 @@ function guessYearFromRoll(roll) {
     const match = r.match(/^(\d{2})wh/);
     if (!match) return '';
     const batch = parseInt(match[1]);
-    // Current academic year approx 2025
-    const diff = 25 - batch;
+    const now = new Date();
+    const academicYear = (now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1) % 100;
+    const diff = academicYear - batch;
     if (diff === 0) return '1st Year';
     if (diff === 1) return '2nd Year';
     if (diff === 2) return '3rd Year';
