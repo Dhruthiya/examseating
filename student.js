@@ -47,6 +47,8 @@ function findSeat(table, rollLower) {
 
 function showSeatResult(table, seat, rollLower) {
     const studentSeat = seat.seat1 && seat.seat1.rollNo.toLowerCase() === rollLower ? seat.seat1 : seat.seat2;
+    const seatNum = seat.seat1 && seat.seat1.rollNo.toLowerCase() === rollLower ? 1 : 2;
+    const benchNo = seat.bench || 0;
 
     document.getElementById('loadingSection').style.display = 'none';
     document.getElementById('resultSection').style.display = 'block';
@@ -55,7 +57,29 @@ function showSeatResult(table, seat, rollLower) {
     document.getElementById('examDate').textContent = table.examDate || table.examDateISO || 'N/A';
     document.getElementById('examTime').textContent = table.examTime || 'N/A';
     document.getElementById('classroom').textContent = seat.classroom || 'N/A';
-    document.getElementById('bench').textContent = seat.bench || 'N/A';
+    document.getElementById('bench').textContent = benchNo || 'N/A';
+    document.getElementById('classroomLabel').textContent = seat.classroom || '';
+
+    renderLayout(benchNo, seatNum);
+}
+
+function renderLayout(benchNo, seatNum) {
+    const grid = document.getElementById('classroomLayout');
+    grid.innerHTML = '';
+    if (!benchNo || benchNo < 1) {
+        grid.innerHTML = '<p style="color:#a0aec0;text-align:center;">Layout unavailable</p>';
+        return;
+    }
+    for (let b = 1; b <= 28; b++) {
+        const benchEl = document.createElement('div');
+        benchEl.className = 'bench-cell';
+        for (let s = 1; s <= 2; s++) {
+            const seatEl = document.createElement('div');
+            seatEl.className = 'seat' + (b === benchNo && s === seatNum ? ' seat-mine' : '');
+            benchEl.appendChild(seatEl);
+        }
+        grid.appendChild(benchEl);
+    }
 }
 
 async function searchSeat(rollNumber) {

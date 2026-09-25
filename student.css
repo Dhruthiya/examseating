@@ -196,3 +196,8 @@ body {
     25% { transform: translateX(-10px); }
     75% { transform: translateX(10px); }
 }
+
+.classroom-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.bench-cell { display: flex; gap: 4px; justify-content: center; }
+.seat { width: 28px; height: 28px; border-radius: 4px; background: #e2e8f0; border: 1px solid #cbd5e0; }
+.seat-mine { background: #3b82f6; border-color: #1d4ed8; }
