@@ -22,87 +22,234 @@ function sortEditStudentRecords(students) {
 
 // ─── Entry point called by showView('edit') ───────────────────────────────────
 async function initEditView() {
+    if (window.studentDatabaseReady) await window.studentDatabaseReady;
+
     const container = document.getElementById('editView');
     container.innerHTML = `
-        <h1 style="margin-bottom:6px;">✏️ Edit Student Data</h1>
-        <p style="color:#6b7280;margin-bottom:28px;font-size:14px;">
-            Upload an Excel or CSV file, then edit student names or hall-ticket numbers before saving. Once saved, seating uses the uploaded roster only.
-        </p>
-
-        <!-- Upload Card -->
-        <div class="edit-card" id="uploadCard">
-            <h3 style="margin:0 0 18px 0;color:#374151;">📂 Upload Excel / CSV File</h3>
-            <div class="edit-upload-area" id="editUploadArea" onclick="document.getElementById('editFileInput').click()">
-                <div style="font-size:40px;margin-bottom:10px;">📤</div>
-                <p style="margin:0;font-weight:600;color:#374151;">Click to browse or drag &amp; drop</p>
-                <p style="margin:6px 0 0;font-size:13px;color:#9ca3af;">Accepted: .csv, .xlsx, .xls</p>
+        <!-- Year cards page -->
+        <div id="editYearPage">
+            <div style="margin-bottom:24px;">
+                <h1 style="margin:0 0 4px 0;color:#1a202c;font-size:24px;font-weight:700;">Students Data</h1>
+                <p style="margin:0;color:#6b7280;font-size:14px;">Manage student rosters by year. Upload, edit, or clear data for each year independently.</p>
             </div>
-            <input type="file" id="editFileInput" accept=".csv,.xlsx,.xls"
-                   style="display:none;" onchange="handleEditFile(event)">
-            <div id="editFileStatus" style="margin-top:14px;font-size:13px;color:#6b7280;"></div>
-            <button id="saveAllStudentDataButton" type="button" class="sidebar-btn"
-                    style="display:none;margin-top:16px;background:#15803d;color:white;"
-                    onclick="saveAllEditDataToSystem()">💾 Save All and Use Workbook</button>
+            <div id="editYearCards" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;"></div>
         </div>
 
-        <!-- Year Selection (shown after upload) -->
-        <div class="edit-card" id="yearCard" style="display:none;">
-            <h3 style="margin:0 0 18px 0;color:#374151;">📅 Select Year</h3>
-            <div id="yearButtons" class="edit-btn-row"></div>
-        </div>
-
-        <!-- Branch Selection -->
-        <div class="edit-card" id="branchCard" style="display:none;">
-            <h3 style="margin:0 0 6px 0;color:#374151;">🏫 Select Branch</h3>
-            <p id="branchCardSub" style="font-size:13px;color:#6b7280;margin:0 0 16px 0;"></p>
-            <div id="branchButtons" class="edit-btn-row"></div>
-        </div>
-
-        <!-- Section Selection -->
-        <div class="edit-card" id="sectionCard" style="display:none;">
-            <h3 style="margin:0 0 6px 0;color:#374151;">📋 Select Section</h3>
-            <p id="sectionCardSub" style="font-size:13px;color:#6b7280;margin:0 0 16px 0;"></p>
-            <div id="sectionButtons" class="edit-btn-row"></div>
-        </div>
-
-        <!-- Roll Number Table -->
-        <div class="edit-card" id="tableCard" style="display:none;">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+        <!-- Drill-down page (hidden until a year is clicked) -->
+        <div id="editDrillPage" style="display:none;">
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+                <button class="ed-btn ed-btn-outline" onclick="editGoBack()">← Back</button>
                 <div>
-                    <h3 style="margin:0;color:#374151;" id="tableCardTitle">👥 Student Roll Numbers</h3>
-                    <p id="tableCardSub" style="font-size:13px;color:#6b7280;margin:4px 0 0 0;"></p>
+                    <h1 style="margin:0 0 2px 0;color:#1a202c;font-size:22px;font-weight:700;" id="drillPageTitle"></h1>
+                    <p style="margin:0;color:#6b7280;font-size:13px;" id="drillPageSub"></p>
                 </div>
-                <button class="sidebar-btn" style="margin:0;background:#4a90e2;color:white;"
-                        onclick="saveEditDataToRollNumbers()">💾 Save Changes</button>
             </div>
-            <div id="editTableWrapper" style="overflow-x:auto;"></div>
-            <div style="position:relative;display:inline-block;margin-top:14px;">
-                <button type="button" class="sidebar-btn" style="margin:0;background:#4a5568;color:white;"
-                        aria-expanded="false" aria-controls="appendDataMenu" onclick="toggleAppendDataMenu(this)">
-                    Appending Data ▾
-                </button>
-                <div id="appendDataMenu" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:5;min-width:180px;padding:6px;background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.12);">
-                    <button type="button" class="append-data-menu-item" onclick="addRollNumberToSection()">Add</button>
-                    <button type="button" class="append-data-menu-item" onclick="deleteRollNumberFromSection()">Delete</button>
+            <div class="edit-card" id="branchCard">
+                <div class="edit-card-header">
+                    <div class="edit-card-title">Select Branch</div>
                 </div>
+                <div id="branchButtons" class="edit-btn-row"></div>
+            </div>
+            <div class="edit-card" id="sectionCard" style="display:none;">
+                <div class="edit-card-header">
+                    <div>
+                        <div class="edit-card-title">Select Section</div>
+                        <div id="sectionCardSub" class="edit-card-sub"></div>
+                    </div>
+                </div>
+                <div id="sectionButtons" class="edit-btn-row"></div>
+            </div>
+            <div class="edit-card" id="tableCard" style="display:none;">
+                <div class="edit-card-header">
+                    <div>
+                        <div class="edit-card-title" id="tableCardTitle">Students</div>
+                        <div id="tableCardSub" class="edit-card-sub"></div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                        <button class="ed-btn ed-btn-green" onclick="showAddStudentForm()">+ Add Student</button>
+                        <button class="ed-btn ed-btn-blue" onclick="saveEditDataToRollNumbers()">Save Changes</button>
+                    </div>
+                </div>
+                <div id="addStudentForm" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:16px;">
+                    <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px;">Add New Student</div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                        <input id="addRollInput" placeholder="Roll Number (e.g. 25wh1a0501)" class="ed-input" style="width:220px;">
+                        <input id="addNameInput" placeholder="Student Name" class="ed-input" style="width:220px;">
+                        <button class="ed-btn ed-btn-green" onclick="confirmAddStudent()">Add</button>
+                        <button class="ed-btn ed-btn-gray" onclick="document.getElementById('addStudentForm').style.display='none'">Cancel</button>
+                    </div>
+                </div>
+                <div id="editTableWrapper" style="overflow-x:auto;"></div>
             </div>
         </div>
     `;
 
-    // Inject styles once
     injectEditStyles();
+    editParsedData = [];
+    renderEditYearCards();
+}
 
-    // Wire up drag-and-drop
-    const dropArea = document.getElementById('editUploadArea');
-    dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('dragover'); });
-    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
-    dropArea.addEventListener('drop', e => {
-        e.preventDefault();
-        dropArea.classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file) processEditFile(file);
-    });
+function renderEditYearCards() {
+    const container = document.getElementById('editYearCards');
+    if (!container) return;
+    container.innerHTML = ALL_YEARS.map(year => {
+        const fromFirebase = uploadedRosterRecords.filter(r => r.year === year)
+            .reduce((sum, r) => sum + (r.students ? r.students.length : 0), 0);
+        const fromParsed = editParsedData.filter(s => s.year === year).length;
+        const count = fromFirebase || fromParsed;
+        const hasData = count > 0;
+        const yearId = year.replace(/\s+/g, '_');
+        return `
+        <div class="ed-year-card ${hasData ? 'ed-year-card--active' : ''}">
+            <div class="ed-year-card__body" onclick="sdBrowseYear('${year}')">
+                <div class="ed-year-card__title">${year}</div>
+                <div class="ed-year-card__status">
+                    ${hasData
+                        ? `<span class="ed-badge ed-badge--green">✓ ${count} students</span>`
+                        : `<span class="ed-badge ed-badge--gray">No data uploaded</span>`}
+                </div>
+                ${hasData ? `<div class="ed-year-card__hint">Click to browse →</div>` : `<div class="ed-year-card__hint">Upload a file to get started</div>`}
+            </div>
+            <div class="ed-year-card__actions">
+                <label for="yearUpload_${yearId}" class="ed-btn ed-btn-outline ed-btn-sm">
+                    ↑ ${hasData ? 'Re-upload' : 'Upload'}
+                </label>
+                <input type="file" id="yearUpload_${yearId}" accept=".csv,.xlsx,.xls" style="display:none;"
+                       onchange="handleYearUpload(event,'${year}')">
+                ${hasData ? `<button class="ed-btn ed-btn-danger-outline ed-btn-sm" onclick="clearYearData('${year}')">Clear Data</button>` : ''}
+                <span id="yearUploadStatus_${yearId}" style="font-size:12px;color:#6b7280;"></span>
+            </div>
+        </div>`;
+    }).join('');
+}
 
+async function clearYearData(year) {
+    const count = uploadedRosterRecords.filter(r => r.year === year)
+        .reduce((sum, r) => sum + (r.students ? r.students.length : 0), 0);
+    if (!confirm(`Remove all ${count} students for ${year} from the database? This cannot be undone.`)) return;
+    try {
+        const snapshot = await db.collection('studentSections').where('year', '==', year).get();
+        const batch = db.batch();
+        snapshot.docs.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        uploadedRosterRecords = uploadedRosterRecords.filter(r => r.year !== year);
+        editParsedData = editParsedData.filter(s => s.year !== year);
+        // Return to year cards page
+        document.getElementById('editDrillPage').style.display = 'none';
+        document.getElementById('editYearPage').style.display = 'block';
+        renderEditYearCards();
+    } catch(err) {
+        alert('Failed to clear data: ' + err.message);
+    }
+}
+
+async function handleYearUpload(event, year) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const yearId = year.replace(/\s+/g, '_');
+    const statusEl = document.getElementById(`yearUploadStatus_${yearId}`);
+    if (statusEl) statusEl.textContent = '⏳ Parsing...';
+
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            let newStudents = [];
+            if (ext === '.csv') {
+                const rows = file.content.split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g,'')));
+                // fallback to processRows logic — just use workbook path for simplicity
+            } else {
+                const wb = XLSX.read(e.target.result, { type: 'array' });
+                wb.SheetNames.forEach(sheetName => {
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: '' });
+                    if (!rows || rows.length < 6) return;
+                    const detectedYear = detectWorkbookYear(rows);
+                    const { branch, section } = parseSheetName(sheetName);
+                    for (let r = 6; r < rows.length; r++) {
+                        const row = rows[r];
+                        if (!row || row.every(c => String(c).trim() === '')) continue;
+                        const leftRoll = String(row[1] || '').trim();
+                        const leftName = String(row[2] || '').trim();
+                        if (leftRoll && /wh/i.test(leftRoll)) {
+                            newStudents.push({ sno: newStudents.length+1, rollNo: leftRoll.toLowerCase(), name: leftName||'—', year: detectedYear||year, branch, section });
+                        }
+                        const rightRoll = String(row[5] || '').trim();
+                        const rightName = String(row[6] || '').trim();
+                        if (rightRoll && /wh/i.test(rightRoll)) {
+                            newStudents.push({ sno: newStudents.length+1, rollNo: rightRoll.toLowerCase(), name: rightName||'—', year: detectedYear||year, branch, section });
+                        }
+                    }
+                });
+            }
+            // Filter to only this year, merge into editParsedData
+            editParsedData = editParsedData.filter(s => s.year !== year).concat(newStudents.filter(s => s.year === year || !s.year));
+            editParsedData = sortEditStudentRecords(editParsedData);
+            if (statusEl) statusEl.textContent = `✅ ${newStudents.length} students`;
+            renderEditYearCards();
+        } catch(err) {
+            if (statusEl) statusEl.textContent = '❌ Parse error';
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function editGoBack() {
+    document.getElementById('editDrillPage').style.display = 'none';
+    document.getElementById('editYearPage').style.display = 'block';
+    renderEditYearCards();
+}
+
+function sdBrowseYear(year) {
+    const fromFirebase = uploadedRosterRecords.filter(r => r.year === year);
+    const fromParsed = editParsedData.filter(s => s.year === year);
+    if (fromFirebase.length === 0 && fromParsed.length === 0) {
+        alert(`No data for ${year} yet. Use the Upload button on the card to add students.`);
+        return;
+    }
+    if (fromFirebase.length > 0 && fromParsed.length === 0) {
+        fromFirebase.forEach(r => {
+            (r.students || []).forEach(st => {
+                editParsedData.push({ sno: editParsedData.length+1, rollNo: st.rollNo, name: st.name||'—', year: r.year, branch: r.branch, section: r.section });
+            });
+        });
+        editParsedData = sortEditStudentRecords(editParsedData);
+    }
+    // Switch to drill page
+    document.getElementById('editYearPage').style.display = 'none';
+    document.getElementById('editDrillPage').style.display = 'block';
+    document.getElementById('drillPageTitle').textContent = year;
+    document.getElementById('drillPageSub').textContent = 'Select a branch and section to view or edit students.';
+    document.getElementById('sectionCard').style.display = 'none';
+    document.getElementById('tableCard').style.display = 'none';
+    renderBranchSelection(year);
+}
+
+function showAddStudentForm() {
+    const form = document.getElementById('addStudentForm');
+    form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+    if (form.style.display !== 'none') document.getElementById('addRollInput').focus();
+}
+
+function confirmAddStudent() {
+    const card = document.getElementById('tableCard');
+    const { year, branch, section } = card.dataset;
+    const rollNo = document.getElementById('addRollInput').value.trim().toLowerCase();
+    const name = document.getElementById('addNameInput').value.trim();
+    if (!rollNo) { alert('⚠️ Roll number is required.'); return; }
+    const duplicate = editParsedData.some(s => s.year === year && s.branch === branch && s.section === section && s.rollNo === rollNo);
+    if (duplicate) { alert('⚠️ Roll number already exists in this section.'); return; }
+    editParsedData.push({ sno: editParsedData.length+1, rollNo, name: name||'—', year, branch, section });
+    editParsedData = sortEditStudentRecords(editParsedData);
+    document.getElementById('addStudentForm').style.display = 'none';
+    document.getElementById('addRollInput').value = '';
+    document.getElementById('addNameInput').value = '';
+    renderRollTable(year, branch, section);
+    renderEditYearCards();
+}
+
+// ─── Rest of initEditView wiring ──────────────────────────────────────────────
+function wireEditViewEvents() {
+    injectEditStyles();
     editParsedData = [];
     setEditStatus('Upload a workbook to display its years and student totals.', '#6b7280');
 }
@@ -113,71 +260,63 @@ function injectEditStyles() {
     const style = document.createElement('style');
     style.id = 'editDataStyles';
     style.textContent = `
-        .edit-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        .edit-card { background:white; border:1px solid #e5e7eb; border-radius:12px; padding:24px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+        .edit-card-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
+        .edit-card-title { font-size:16px; font-weight:700; color:#1a202c; }
+        .edit-card-sub { font-size:13px; color:#6b7280; margin-top:2px; }
+        .edit-btn-row { display:flex; flex-wrap:wrap; gap:10px; }
+        .edit-branch-btn, .edit-section-btn {
+            padding:9px 20px; border:1.5px solid #e5e7eb; border-radius:8px;
+            background:white; color:#374151; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.15s;
         }
-        .edit-upload-area {
-            border: 2px dashed #cbd5e0;
-            border-radius: 10px;
-            padding: 36px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: border-color 0.2s, background 0.2s;
-        }
-        .edit-upload-area:hover, .edit-upload-area.dragover {
-            border-color: #4a90e2;
-            background: #eff6ff;
-        }
-        .edit-btn-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .edit-year-btn, .edit-branch-btn, .edit-section-btn {
-            padding: 10px 22px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            background: white;
-            color: #374151;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .edit-year-btn:hover, .edit-branch-btn:hover, .edit-section-btn:hover {
-            border-color: #4a90e2;
-            background: #eff6ff;
-            color: #1d4ed8;
-        }
-        .edit-year-btn.active, .edit-branch-btn.active, .edit-section-btn.active {
-            border-color: #4a90e2;
-            background: #4a90e2;
-            color: white;
-        }
-        #editTableWrapper table { margin-top: 0; }
-        .edit-row-button, .cancel-row-button {
-            border: 0; border-radius: 5px; padding: 6px 11px; cursor: pointer;
-            background: #2563eb; color: white; font-size: 13px;
-        }
-        .append-data-menu-item {
-            display:block;
-            width:100%;
-            padding:9px 12px;
-            border:0;
-            border-radius:5px;
-            background:white;
-            color:#374151;
-            text-align:left;
-            cursor:pointer;
-        }
-        .append-data-menu-item:hover { background:#f3f4f6; }
-        .cancel-row-button { background: #6b7280; margin-left: 5px; }
-        .student-edit-input { width: 100%; box-sizing: border-box; padding: 7px; border: 1px solid #cbd5e1; border-radius: 5px; }
+        .edit-branch-btn:hover, .edit-section-btn:hover { border-color:#4a90e2; background:#eff6ff; color:#1d4ed8; }
+        .edit-branch-btn.active, .edit-section-btn.active { border-color:#4a90e2; background:#4a90e2; color:white; }
+
+        /* Year cards */
+        .ed-year-card { background:white; border:1.5px solid #e5e7eb; border-radius:12px; padding:20px; transition:box-shadow 0.15s; }
+        .ed-year-card--active { border-color:#38a169; background:#f0fff4; }
+        .ed-year-card__body { cursor:pointer; margin-bottom:14px; }
+        .ed-year-card__title { font-size:17px; font-weight:700; color:#1a202c; margin-bottom:6px; }
+        .ed-year-card__status { margin-bottom:4px; }
+        .ed-year-card__hint { font-size:12px; color:#9ca3af; margin-top:4px; }
+        .ed-year-card__actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding-top:12px; border-top:1px solid #f0f0f0; }
+
+        /* Badges */
+        .ed-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+        .ed-badge--green { background:#d1fae5; color:#065f46; }
+        .ed-badge--gray { background:#f3f4f6; color:#6b7280; }
+
+        /* Buttons */
+        .ed-btn { display:inline-flex; align-items:center; gap:4px; padding:8px 16px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; border:none; transition:all 0.15s; white-space:nowrap; }
+        .ed-btn-sm { padding:5px 12px; font-size:12px; }
+        .ed-btn-blue { background:#4a90e2; color:white; }
+        .ed-btn-blue:hover { background:#2c5aa0; }
+        .ed-btn-green { background:#38a169; color:white; }
+        .ed-btn-green:hover { background:#276749; }
+        .ed-btn-gray { background:#6b7280; color:white; }
+        .ed-btn-gray:hover { background:#4b5563; }
+        .ed-btn-danger { background:#fff0f0; color:#dc2626; border:1px solid #fecaca; }
+        .ed-btn-danger:hover { background:#dc2626; color:white; border-color:#dc2626; }
+        .ed-btn-outline { background:white; color:#4b5563; border:1.5px solid #d1d5db; }
+        .ed-btn-outline:hover { background:#f9fafb; border-color:#9ca3af; }
+        .ed-btn-danger-outline { background:white; color:#dc2626; border:1.5px solid #fecaca; }
+        .ed-btn-danger-outline:hover { background:#fff0f0; }
+
+        /* Input */
+        .ed-input { padding:8px 12px; border:1.5px solid #e0e0e0; border-radius:7px; font-size:14px; outline:none; transition:border-color 0.15s; }
+        .ed-input:focus { border-color:#4a90e2; }
+
+        /* Table */
+        .ed-table { width:100%; border-collapse:collapse; font-size:14px; }
+        .ed-table th { background:#f8fafc; color:#374151; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.04em; padding:10px 14px; text-align:left; border-bottom:2px solid #e5e7eb; }
+        .ed-table td { padding:11px 14px; border-bottom:1px solid #f0f0f0; color:#1a202c; vertical-align:middle; }
+        .ed-table tr:last-child td { border-bottom:none; }
+        .ed-table tr:hover td { background:#fafafa; }
+
+        /* Inline edit inputs */
+        .student-edit-input { width:100%; box-sizing:border-box; padding:6px 8px; border:1.5px solid #cbd5e1; border-radius:5px; font-size:13px; }
+        .edit-row-button, .cancel-row-button { border:0; border-radius:5px; padding:5px 10px; cursor:pointer; background:#2563eb; color:white; font-size:12px; }
+        .cancel-row-button { background:#6b7280; margin-left:4px; }
     `;
     document.head.appendChild(style);
 }
@@ -514,6 +653,8 @@ function guessYearFromRoll(roll) {
 const ALL_YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
 function renderYearSelection() {
+    renderEditYearCards(); // refresh status cards with new data counts
+
     const container = document.getElementById('yearButtons');
     container.innerHTML = '';
 
@@ -552,7 +693,7 @@ function renderBranchSelection(year) {
     const branches = BRANCH_ORDER.filter(b => branchesInData.includes(b))
         .concat(branchesInData.filter(b => !BRANCH_ORDER.includes(b)).sort());
 
-    document.getElementById('branchCardSub').textContent = `Year: ${year}`;
+    document.getElementById('branchCardSub') && (document.getElementById('branchCardSub').textContent = `Year: ${year}`);
     const container = document.getElementById('branchButtons');
     container.innerHTML = '';
 
@@ -641,22 +782,27 @@ function renderRollTable(year, branch, section) {
         wrapper.innerHTML = '<p style="color:#9ca3af;text-align:center;padding:20px;">No students found for this selection.</p>';
     } else {
         wrapper.innerHTML = `
-            <table>
+            <table class="ed-table">
                 <thead>
                     <tr>
-                        <th style="width:60px;">S.No</th>
+                        <th style="width:56px;">#</th>
                         <th>Roll Number</th>
                         <th>Student Name</th>
-                        <th style="width:150px;">Actions</th>
+                        <th style="width:140px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${students.map(({ student, index }, rowIndex) => `
                         <tr id="student-row-${index}">
-                            <td>${rowIndex + 1}</td>
-                            <td class="student-roll-cell" style="font-family:monospace;">${escapeEditHTML(student.rollNo)}</td>
-                            <td class="student-name-cell">${escapeEditHTML(student.name)}</td>
-                            <td><button type="button" class="edit-row-button" onclick="editStudentRow(${index})">Edit</button></td>
+                            <td style="color:#9ca3af;">${rowIndex + 1}</td>
+                            <td style="font-family:monospace;font-size:13px;">${escapeEditHTML(student.rollNo)}</td>
+                            <td>${escapeEditHTML(student.name)}</td>
+                            <td>
+                                <div style="display:flex;gap:6px;">
+                                    <button class="ed-btn ed-btn-blue ed-btn-sm" onclick="editStudentRow(${index})">Edit</button>
+                                    <button class="ed-btn ed-btn-danger ed-btn-sm" onclick="deleteStudentRow(${index})" title="Remove student">Delete</button>
+                                </div>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -735,6 +881,15 @@ function escapeEditHTML(value) {
     return String(value ?? '').replace(/[&<>"']/g, character => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     })[character]);
+}
+
+function deleteStudentRow(index) {
+    const student = editParsedData[index];
+    if (!student) return;
+    if (!confirm(`Remove ${student.name} (${student.rollNo}) from this section?`)) return;
+    editParsedData.splice(index, 1);
+    renderRollTable(student.year, student.branch, student.section);
+    renderEditYearCards();
 }
 
 function editStudentRow(index) {
