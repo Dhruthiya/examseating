@@ -70,7 +70,8 @@ function renderLayout(benchNo, seatNum) {
         grid.innerHTML = '<p style="color:#a0aec0;text-align:center;">Layout unavailable</p>';
         return;
     }
-    for (let b = 1; b <= 28; b++) {
+    const totalBenches = Math.max(28, benchNo);
+    for (let b = 1; b <= totalBenches; b++) {
         const benchEl = document.createElement('div');
         benchEl.className = 'bench-cell';
         for (let s = 1; s <= 2; s++) {

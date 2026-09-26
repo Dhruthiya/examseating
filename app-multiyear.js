@@ -469,7 +469,13 @@ async function calculateRoomRequirements() {
     roomRequirementContext = {
         totalStudents,
         requiredBenches,
-        roomsRequired: Math.ceil(requiredBenches / 28)
+        roomsRequired: (function() {
+            const fullRooms = Math.floor(requiredBenches / 28);
+            const leftoverBenches = requiredBenches % 28;
+            // leftover benches fit in extra row (<=4 benches = <=8 students) → no extra room needed
+            if (leftoverBenches > 0 && leftoverBenches <= 4 && fullRooms > 0) return fullRooms;
+            return Math.ceil(requiredBenches / 28);
+        })()
     };
 
     const availableRoomCount = getAllAvailableRooms().filter(room => !occupiedRoomsForSelectedSlot.has(room)).length;
@@ -880,29 +886,42 @@ function allocateStudentsToBenches(students) {
 function allocateSeatsToClassrooms(students) {
     const BENCHES_PER_CLASSROOM = 28;
     const allBenches = allocateStudentsToBenches(students);
-
-    const actualRoomsNeeded = Math.ceil(allBenches.length / BENCHES_PER_CLASSROOM);
     const rooms = Array.from(selectedRooms);
-    const roomsToUse = rooms.slice(0, actualRoomsNeeded);
-    const seatingResult = [];
-    let benchIndex = 0;
 
-    roomsToUse.forEach(room => {
-        for (let bench = 1; bench <= BENCHES_PER_CLASSROOM && benchIndex < allBenches.length; bench++) {
-            const benchData = allBenches[benchIndex++];
+    // Distribute benches into rooms (28 per room)
+    const roomBenches = {};
+    let benchIndex = 0;
+    rooms.forEach(room => {
+        roomBenches[room] = [];
+        for (let i = 0; i < BENCHES_PER_CLASSROOM && benchIndex < allBenches.length; i++) {
+            roomBenches[room].push(allBenches[benchIndex++]);
+        }
+    });
+
+    // Any remaining benches (overflow, <=4) go into the last room's extra row
+    if (benchIndex < allBenches.length) {
+        const lastRoom = rooms[rooms.length - 1];
+        while (benchIndex < allBenches.length) {
+            roomBenches[lastRoom].push(allBenches[benchIndex++]);
+        }
+    }
+
+    const seatingResult = [];
+    rooms.forEach(room => {
+        roomBenches[room].forEach((benchData, idx) => {
             seatingResult.push({
                 classroom: room,
-                bench,
+                bench: idx + 1,
                 seat1: benchData.seat1,
                 seat2: benchData.seat2
             });
-        }
+        });
     });
 
     return {
         seated: seatingResult,
         overflow: [],
-        sections: roomsToUse.map(room => ({ name: room }))
+        sections: rooms.map(room => ({ name: room }))
     };
 }
 

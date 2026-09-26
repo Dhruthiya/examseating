@@ -27,40 +27,52 @@ window.onload = function() {
 
 function displayClassroomTables(seatingData, sections) {
     let html = '<h2>🏫 Seating Arrangement by Classroom</h2>';
-    
+
     sections.forEach(classroom => {
-        const classroomSeats = seatingData.filter(row => row.classroom === classroom.name);
-        if (classroomSeats.length === 0) return;
-        
-        const col1 = classroomSeats.slice(0, 7);
-        const col2 = classroomSeats.slice(7, 14);
-        const col3 = classroomSeats.slice(14, 21);
-        const col4 = classroomSeats.slice(21, 28);
-        
-        html += `
-            <div class="classroom-table" style="margin-top: 30px;">
-                <h3>🚪 ${classroom.name}</h3>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px;">
-        `;
-        
-        [col1, col2, col3, col4].forEach((column, colIndex) => {
+        const seats = seatingData.filter(row => row.classroom === classroom.name);
+        if (seats.length === 0) return;
+
+        const normalSeats = seats.slice(0, 28);
+        const extraSeats  = seats.slice(28); // up to 4 overflow benches
+
+        const col1 = normalSeats.slice(0, 7);
+        const col2 = normalSeats.slice(7, 14);
+        const col3 = normalSeats.slice(14, 21);
+        const col4 = normalSeats.slice(21, 28);
+
+        html += `<div class="classroom-table" style="margin-top: 30px;">
+            <h3>🚪 ${classroom.name}</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px;">`;
+
+        [col1, col2, col3, col4].forEach(col => {
             html += `<table><tbody>`;
-            
-            column.forEach(row => {
-                html += `
-                    <tr>
-                        <td>${row.seat1.rollNo}</td>
-                        <td>${row.seat2 ? row.seat2.rollNo : '-'}</td>
-                    </tr>
-                `;
+            col.forEach(row => {
+                html += `<tr><td>${row.seat1.rollNo}</td><td>${row.seat2 ? row.seat2.rollNo : '-'}</td></tr>`;
             });
-            
             html += `</tbody></table>`;
         });
-        
-        html += `</div></div>`;
+
+        html += `</div>`;
+
+        // Extra row: overflow benches continue in the same 4-column grid as a new row
+        if (extraSeats.length > 0) {
+            const extraCols = [[], [], [], []];
+            extraSeats.forEach((row, idx) => extraCols[idx].push(row));
+
+            html += `<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 4px;">`;
+            extraCols.forEach(col => {
+                html += `<table><tbody>`;
+                col.forEach(row => {
+                    html += `<tr><td>${row.seat1.rollNo}</td><td>${row.seat2 ? row.seat2.rollNo : '-'}</td></tr>`;
+                });
+                html += `</tbody></table>`;
+            });
+            html += `</div>`;
+        }
+
+        html += `</div>`;
     });
-    
+
     document.getElementById('tableContainer').innerHTML = html;
 }
 
