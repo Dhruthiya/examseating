@@ -130,21 +130,26 @@ function getStudentCountForYear(year) {
 
 function updateYearAvailabilityButtons() {
     const availableYears = [];
+    const hasUploadedRoster = uploadedRosterRecords.length > 0;
     document.querySelectorAll('.year-btn[data-year]').forEach(button => {
         const year = button.dataset.year;
         const count = getStudentCountForYear(year);
-        button.textContent = `${year} (${count} students)`;
-        button.disabled = count === 0;
-        button.style.opacity = count === 0 ? '0.45' : '1';
-        button.style.cursor = count === 0 ? 'not-allowed' : 'pointer';
-        button.title = count === 0 ? 'No saved students for this year' : `${count} saved students`;
-        if (count > 0) availableYears.push(`${year}: ${count}`);
+        button.textContent = hasUploadedRoster ? `${year} (${count} students)` : year;
+        button.disabled = hasUploadedRoster && count === 0;
+        button.style.opacity = hasUploadedRoster && count === 0 ? '0.45' : '1';
+        button.style.cursor = hasUploadedRoster && count === 0 ? 'not-allowed' : 'pointer';
+        button.title = hasUploadedRoster
+            ? (count === 0 ? 'No saved students for this year' : `${count} saved students`)
+            : 'Upload and save a workbook to display student totals';
+        if (hasUploadedRoster && count > 0) availableYears.push(`${year}: ${count}`);
     });
     const hint = document.getElementById('yearRosterHint');
     if (hint) {
-        hint.textContent = availableYears.length
-            ? `Roster data available — ${availableYears.join(' · ')}`
-            : 'No student roster is currently available.';
+        hint.textContent = hasUploadedRoster
+            ? (availableYears.length
+                ? `Roster data available — ${availableYears.join(' · ')}`
+                : 'No student roster is currently available.')
+            : 'Upload and save a workbook to display roster totals.';
     }
 }
 
