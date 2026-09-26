@@ -72,10 +72,10 @@ Manual exam seating arrangement was:
 ## 🔒 Constraints & Requirements
 
 ### Hard Constraints (Must-Have)
-1. **No Same-Branch Bench Partners**: Students from the same branch cannot sit together on the same bench
-2. **No Same-Subject Bench Partners**: Students taking the same exam subject cannot sit together
-3. **Fixed Classroom Capacity**: Each classroom has exactly 32 benches (64 students max)
-4. **Bench Layout**: 4 columns × 8 rows per classroom
+1. **Different-Subject Bench Partners**: Two students may share a bench whenever they take different subjects, regardless of branch or section
+2. **Same-Subject Separation**: Students taking the same subject cannot share a bench
+3. **Fixed Classroom Capacity**: Each classroom has 28 benches (up to 56 students)
+4. **Bench Layout**: 4 columns × 7 rows per classroom
 5. **Roll Number Format**: Specific format (e.g., 25wh1a0501 for CSE)
 6. **Authentication**: Admin-only access for generation, student access for viewing
 
@@ -297,7 +297,9 @@ navyachinta31545@gmail.com
 ## ✨ Key Features Implemented
 
 ### 1. Intelligent Seat Allocation
-- **Two-pass algorithm** ensures no same-branch/subject bench partners
+- **Subject-based pairing** allows students from different subjects to share a bench, regardless of branch or section
+- **Single seats** are used when no different-subject partner remains
+- **Room count** is based on allocated benches, at 28 benches per classroom
 - **Overflow handling** creates additional classrooms automatically
 - **Fair distribution** across all available classrooms
 
@@ -366,52 +368,21 @@ Complex alphanumeric patterns:
 - **AIML-A**: 25wh1a6601 → 25wh1a6664 (64 students)
 - **EEE-A**: 25wh1a4401 → 25wh1a4464 (64 students)
 
-#### Two-Pass Allocation Algorithm
+#### Active Bench Allocation
 
-**Pass 1: Fill Seat 1**
-```
-For each classroom:
-    For each bench (1-32):
-        Find a student where:
-            - Student not already seated
-            - Student NOT from this classroom's section
-        Assign to seat1
-        Mark student as seated
-```
-
-**Pass 2: Fill Seat 2**
-```
-For each classroom:
-    For each bench with seat1 filled:
-        Find a student where:
-            - Student not already seated
-            - Student NOT from this classroom's section
-            - Student from DIFFERENT branch than seat1
-            - Student taking DIFFERENT subject than seat1
-        Assign to seat2
-        Mark student as seated
-```
-
-**Overflow Handling**
-```
-For remaining unseated students:
-    Create additional classrooms
-    Pair students with different subjects when possible
-    Fill benches sequentially
-    Calculate number of overflow classrooms needed
-```
+The generator processes the selected students and pairs a student with the next available student taking a different subject. Branch and section do not restrict pairing. If no different-subject partner remains, the student occupies a bench alone. Required rooms are calculated from the resulting bench count at 28 benches per room.
 
 #### Bench-to-Position Mapping
 ```javascript
 Bench Number → Column & Row
-bench = 1-8   → Column 1, Row 1-8
-bench = 9-16  → Column 2, Row 1-8
-bench = 17-24 → Column 3, Row 1-8
-bench = 25-32 → Column 4, Row 1-8
+bench = 1-7   → Column 1, Row 1-7
+bench = 8-14  → Column 2, Row 1-7
+bench = 15-21 → Column 3, Row 1-7
+bench = 22-28 → Column 4, Row 1-7
 
 Formula:
-column = Math.ceil(bench / 8)
-row = ((bench - 1) % 8) + 1
+column = Math.ceil(bench / 7)
+row = ((bench - 1) % 7) + 1
 ```
 
 ---
@@ -424,9 +395,9 @@ row = ((bench - 1) % 8) + 1
 **Learning**: Real-world data is messy; algorithms must handle edge cases
 
 ### 2. Constraint Satisfaction
-**Challenge**: Ensuring no same-branch AND no same-subject bench partners
-**Solution**: Two-pass algorithm with strict validation at each step
-**Learning**: Breaking complex problems into sequential passes simplifies logic
+**Challenge**: Avoiding same-subject bench partners while using a fixed room layout
+**Solution**: Pair students across subjects and calculate room needs from the number of occupied benches
+**Learning**: Bench constraints affect room counts when some students must sit alone
 
 ### 3. Firebase Asynchronous Operations
 **Challenge**: JavaScript async/await with Firebase queries
@@ -551,10 +522,10 @@ examseating/
 
 ### Quantitative Achievements
 - ✅ **385+ students** allocated in < 1 second
-- ✅ **100% constraint compliance** (no same-branch/subject partners)
+- ✅ **Different-subject bench pairing** (branch and section do not restrict pairing)
 - ✅ **Zero manual errors** in allocation
 - ✅ **4 branches** supported simultaneously
-- ✅ **32 benches per classroom** (64 students) capacity
+- ✅ **28 benches per classroom** (up to 56 students) capacity
 - ✅ **Automatic overflow** handling for unlimited students
 - ✅ **3 export formats** (screen, PDF, Excel)
 - ✅ **Mobile responsive** (320px+ screen width)

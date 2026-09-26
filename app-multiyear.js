@@ -863,9 +863,7 @@ function allocateStudentsToBenches(students) {
     while (remaining.length) {
         const student = remaining.shift();
         const partnerIndex = remaining.findIndex(candidate =>
-            normalize(candidate.branch) !== normalize(student.branch) &&
-            normalize(candidate.subject) !== normalize(student.subject) &&
-            normalize(candidate.section) !== normalize(student.section)
+            normalize(candidate.subject) !== normalize(student.subject)
         );
         const partner = partnerIndex >= 0 ? remaining.splice(partnerIndex, 1)[0] : null;
         benches.push({ seat1: student, seat2: partner });
