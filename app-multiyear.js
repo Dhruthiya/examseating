@@ -279,7 +279,7 @@ async function checkReady() {
     }
 
     await refreshOccupiedRoomsForSelectedSlot();
-    calculateRoomRequirements();
+    await calculateRoomRequirements();
 }
 
 async function refreshOccupiedRoomsForSelectedSlot() {
@@ -395,18 +395,33 @@ async function loadTablesSidebar(selectedTableId = null) {
     }
 }
 
-function calculateRoomRequirements() {
+async function calculateRoomRequirements() {
+    const savedRecords = await loadStudentDatabaseOverrides();
     let totalStudents = 0;
+    const requestedSections = [];
 
     selectedYears.forEach(year => {
         const data = yearData[year];
         data.branches.forEach(branch => {
             branchData[branch].sections.forEach(sectionName => {
-                const rollNumbers = getRollNumbersForYearSection(year, sectionName);
-                totalStudents += rollNumbers.length;
+                const section = sectionName.replace('-', ' ').split(/\s+/).pop();
+                requestedSections.push({ year, branch, section });
             });
         });
     });
+
+    const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const selectedRosterSections = savedRecords.filter(record => requestedSections.some(request =>
+        normalize(record.year) === normalize(request.year) &&
+        normalize(record.branch) === normalize(request.branch) &&
+        normalize(record.section) === normalize(request.section)
+    ));
+    selectedRosterSections.forEach(record => {
+        totalStudents += (record.students || []).filter(student => String(student.rollNo || '').trim()).length;
+    });
+    const escapeRosterLabel = value => String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
 
     roomRequirementContext = {
         totalStudents,
@@ -432,7 +447,7 @@ function calculateRoomRequirements() {
                 <button onclick="startManualAssign(${roomRequirementContext.roomsRequired})" style="flex: 1; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
                     ✋ Manual Assign
                 </button>
-            </div>` : '<p style="margin-top:20px;"><strong>No saved students for this selection.</strong> Upload and save the roster from the Edit section first.</p>'}
+            </div>` : `<p style="margin-top:20px;"><strong>No saved students for this selection.</strong> Selected: ${Array.from(selectedYears).map(escapeRosterLabel).join(', ')} — ${Array.from(new Set(requestedSections.map(section => section.branch))).map(escapeRosterLabel).join(', ')}.</p><p>Saved sections in the database: ${savedRecords.length ? savedRecords.map(record => `${escapeRosterLabel(record.year)} ${escapeRosterLabel(record.branch)}-${escapeRosterLabel(record.section)} (${(record.students || []).length})`).join(', ') : 'none'}.</p>`}
         </div>
     `;
 
