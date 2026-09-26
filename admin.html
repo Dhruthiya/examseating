@@ -34,7 +34,6 @@
         <div class="sidebar">
             <h2>🎓 Admin Panel</h2>
             <button class="sidebar-btn" onclick="showView('tables')">📋 All Tables</button>
-            <button class="sidebar-btn" onclick="showGenerateForm()">➕ Generate Table</button>
             <button class="sidebar-btn" onclick="showView('edit')">✏️ Edit</button>
             <div class="sidebar-section-title">Generated Tables</div>
             <div id="sidebarTablesList" class="sidebar-tables-list"></div>
@@ -93,7 +92,10 @@
             </div>
             
             <div id="allTablesView">
-                <h1>📋 All Tables</h1>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+                    <h1 style="margin:0;">📋 All Tables</h1>
+                    <button class="generate-btn" onclick="showGenerateForm()">➕ Generate Table</button>
+                </div>
                 <div id="tablesContainer"></div>
             </div>
             <div id="editView"></div>
@@ -110,12 +112,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config-simple.js"></script>
-    <script src="rollnumbers.js?v=whole-workbook-flow-20260926"></script>
+    <script src="rollnumbers.js?v=all-tables-generate-20260926"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="app-multiyear.js?v=whole-workbook-flow-20260926"></script>
-    <script src="edit-data.js?v=whole-workbook-flow-20260926"></script>
+    <script src="app-multiyear.js?v=all-tables-generate-20260926"></script>
+    <script src="edit-data.js?v=all-tables-generate-20260926"></script>
     <script>
         if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
             window.location.href = 'index.html';

@@ -43,9 +43,6 @@ async function initEditView() {
             <button id="saveAllStudentDataButton" type="button" class="sidebar-btn"
                     style="display:none;margin-top:16px;background:#15803d;color:white;"
                     onclick="saveAllEditDataToSystem()">💾 Save All and Use Workbook</button>
-            <button id="generateFromUploadButton" type="button" class="sidebar-btn"
-                    style="display:none;margin-top:10px;background:#4a90e2;color:white;"
-                    onclick="saveRosterAndOpenGenerator()">🎓 Generate Table</button>
         </div>
 
         <!-- Year Selection (shown after upload) -->
@@ -195,7 +192,6 @@ function processEditFile(file) {
 
     setEditStatus(`⏳ Parsing "${file.name}"...`, '#6b7280');
     setSaveAllButtonVisible(false);
-    setGenerateFromUploadButtonVisible(false);
 
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -271,7 +267,6 @@ function processRows(rows, filename) {
     editParsedData = sortEditStudentRecords(parsed);
     setEditStatus(`✅ Parsed ${parsed.length} students from "${filename}"`, 'green');
     setSaveAllButtonVisible(true);
-    setGenerateFromUploadButtonVisible(true);
     renderYearSelection();
 }
 
@@ -335,7 +330,6 @@ function processWorkbook(workbook, filename) {
     const sheetCount = workbook.SheetNames.length;
     setEditStatus(`✅ Parsed ${allStudents.length} students from ${sheetCount} sheets in "${filename}"`, 'green');
     setSaveAllButtonVisible(true);
-    setGenerateFromUploadButtonVisible(true);
     renderYearSelection();
 }
 
@@ -841,14 +835,4 @@ async function saveAllEditDataToSystem() {
         alert(`Could not replace the student database: ${error.message}`);
         return false;
     }
-}
-
-function setGenerateFromUploadButtonVisible(visible) {
-    const button = document.getElementById('generateFromUploadButton');
-    if (button) button.style.display = visible ? 'inline-block' : 'none';
-}
-
-async function saveRosterAndOpenGenerator() {
-    const saved = await saveAllEditDataToSystem();
-    if (saved) await showGenerateForm();
 }
