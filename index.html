@@ -28,8 +28,8 @@
             <div style="text-align: center; margin: 20px 0; color: #6c757d; font-size: 13px;">OR</div>
             
             <div style="margin: 20px 0;">
-                <p style="text-align: center; color: #6c757d; margin-bottom: 12px; font-size: 13px;">Admin Login</p>
-                <a href="admin.html" onclick="openAdminDashboard(event)" style="display: block; margin: 0 auto 12px; padding: 11px 16px; max-width: 320px; background: #dc3545; color: white; border-radius: 6px; font-size: 15px; font-weight: 600; text-align: center; text-decoration: none;">🔑 Admin</a>
+                <p style="text-align: center; color: #6c757d; margin-bottom: 12px; font-size: 13px;">Admin Sign-In</p>
+                <button type="button" onclick="startAdminSignIn()" style="display: block; margin: 0 auto 12px; padding: 11px 16px; width: 320px; max-width: 100%; background: #dc3545; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer;">🔑 Admin</button>
                 <div id="g_id_onload"
                      data-client_id="361381758196-dkfkah9p0rdri0hrp1gbgdtnqqrkmul5.apps.googleusercontent.com"
                      data-callback="handleGoogleLogin"
@@ -53,11 +53,12 @@
     
     <script src="login.js"></script>
     <script>
-        function openAdminDashboard(event) {
-            event.preventDefault();
-            sessionStorage.setItem('isLoggedIn', 'true');
-            sessionStorage.setItem('userRole', 'admin');
-            window.location.href = 'admin.html';
+        function startAdminSignIn() {
+            if (window.google?.accounts?.id) {
+                window.google.accounts.id.prompt();
+                return;
+            }
+            document.querySelector('.g_id_signin')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function searchStudent() {

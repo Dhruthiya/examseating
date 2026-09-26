@@ -118,8 +118,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="app-multiyear.js?v=append-delete-roll-menu-20260926"></script>
     <script src="edit-data.js?v=append-delete-roll-menu-20260926"></script>
+    <script src="login.js"></script>
     <script>
-        if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
+        const adminEmail = (sessionStorage.getItem('userEmail') || '').trim().toLowerCase();
+        if (!sessionStorage.getItem('isLoggedIn') ||
+            sessionStorage.getItem('userRole') !== 'admin' ||
+            !window.ADMIN_EMAILS.includes(adminEmail)) {
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('userEmail');
+            sessionStorage.removeItem('userRole');
             window.location.href = 'index.html';
         } else {
             document.getElementById('adminContent').style.display = 'flex';

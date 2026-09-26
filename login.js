@@ -1,20 +1,22 @@
+// Approved admin accounts used by the Google Sign-In flow and admin page guard.
+window.ADMIN_EMAILS = [
+    'navyachinta31545@gmail.com',
+    'sriyajami08@gmail.com',
+    'kamalhasiniemani@gmail.com',
+    'aasifa.zaina@gmail.com',
+    'dhruthiyagillala@gmail.com'
+];
+
 // Google Sign-In callback
 async function handleGoogleLogin(response) {
     const userInfo = parseJwt(response.credential);
-    const email = userInfo.email;
+    const email = String(userInfo.email || '').trim().toLowerCase();
     const errorMsg = document.getElementById('errorMsg');
     
     console.log('🔐 Google login attempt:', email);
     
     // Check if admin
-    const adminEmails = [
-        'navyachinta31545@gmail.com',
-        'sriyajami08@gmail.com',
-        'kamalhasiniemani@gmail.com',
-        'aasifa.zaina@gmail.com',
-        'dhruthiyagillala@gmail.com'
-    ];
-    if (adminEmails.includes(email)) {
+    if (window.ADMIN_EMAILS.includes(email)) {
         console.log('✅ Admin login successful');
         sessionStorage.setItem('isLoggedIn', 'true');
         sessionStorage.setItem('userEmail', email);

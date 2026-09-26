@@ -1,89 +1,90 @@
-# Exam Seating Arrangement System
+# Seat Snap — Exam Seating Arrangement System
 
-## 🚀 Quick Setup
+Seat Snap helps administrators prepare exam seating arrangements from student rosters. Students can find their assigned seat by entering their roll number; they do not need to sign in.
 
-### 1. Google OAuth Setup
+## Features
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project: "Exam Seating System"
-3. Enable "Google+ API"
-4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
-5. Configure OAuth consent screen:
-   - User Type: External
-   - App name: Exam Seating System
-   - User support email: your-email@gmail.com
-   - Developer contact: your-email@gmail.com
-6. Create OAuth Client ID:
-   - Application type: Web application
-   - Name: Exam Seating Web
-   - Authorized JavaScript origins:
-     ```
-     http://localhost:8080
-     https://examseating-three.vercel.app
-     ```
-   - Authorized redirect URIs:
-     ```
-     http://localhost:8080
-     https://examseating-three.vercel.app
-     ```
-7. Copy the **Client ID**
+- Search for a seat using a full roll number
+- Upload student rosters as CSV or Excel files
+- Review and edit student records by year, branch, and section
+- Generate seating arrangements for selected years, branches, and rooms
+- Fit up to eight leftover students into an extra row when room capacity allows
+- Save and manage student rosters and exam tables in Firebase Firestore
+- View seating results and export them as PDF or Excel
 
-### 2. ~~Update home.html~~ ✅ Already configured!
+## How to use
 
-Your Google OAuth Client ID is already set up in `index.html`:
+### Students
+
+1. Open the home page.
+2. Enter your full roll number, such as `25wh1a0501`.
+3. Select **Find My Seat** to see your seating details.
+
+### Administrators
+
+1. Sign in with Google using an approved admin account.
+2. Open **Students Data** and upload a CSV or Excel roster.
+3. Review the roster and save the records.
+4. Generate an arrangement by choosing the semester, years, branches, exam details, and rooms.
+5. Review, save, and manage the seating table.
+
+Approved admin email addresses are configured in `login.js`.
+
+For CSV uploads, use these headers:
+
+```csv
+Roll Number,Name,Year,Branch,Section
+25wh1a0501,Student Name,2nd Year,CSE,A
 ```
-361381758196-dkfkah9p0rdri0hrp1gbgdtnqqrkmul5.apps.googleusercontent.com
-```
 
-### 3. Deploy to Vercel
+`Roll Number` is required. Upload the CSV from the matching year card; include the other columns when available.
+
+## Run locally
+
+This is a static HTML, CSS, and JavaScript app; it does not need a build step. From the project folder, start a local web server:
 
 ```bash
-# Install Vercel CLI
-npm i -g vercel
+python3 -m http.server 8080
+```
 
-# Login to Vercel
+Then open [http://localhost:8080](http://localhost:8080).
+
+To use Google Sign-In locally, add `http://localhost:8080` as an authorized JavaScript origin for the Google OAuth client configured in `index.html`.
+
+## Services and configuration
+
+- **Google Identity Services** provides Google Sign-In. Add the local and production site origins to the OAuth client's authorized JavaScript origins. The client ID is in `index.html`, and approved admin email addresses are in `login.js`.
+- **Firebase Firestore** stores student rosters in `studentSections` and saved exam tables in `examTables`. The web app's Firebase configuration is in `firebase-config-simple.js`.
+- Set up a Firebase project with Firestore and update `firebase-config-simple.js` if using a different project. Student lookup and admin data operations require that project to be available.
+- Google Sign-In and the admin email check currently run in the browser. This is a UI gate, not secure authorization. The repository setup guide specifies Firestore test mode (permissive rules); live rules are not tracked here, so confirm them in Firebase Console. Protect sensitive database operations with Firebase Authentication and Firestore Security Rules.
+
+## Deploy to Vercel
+
+Install the Vercel CLI, sign in, and link the project the first time you deploy:
+
+```bash
+npm install -g vercel
 vercel login
-
-# Deploy
-cd /home/cse/examseating
+vercel link
 vercel --prod
 ```
 
-### 4. Update OAuth URLs
+Choose the existing `examseating` project when linking. The signed-in Vercel account must have access to it. The production site is [examseating-three.vercel.app](https://examseating-three.vercel.app).
 
-The production URL is https://examseating-three.vercel.app. Add it under Authorized JavaScript origins in the Google OAuth client settings.
+For a different deployment, replace the Firebase web configuration in `firebase-config-simple.js`, use your own Google OAuth client ID in `index.html`, and add the deployed site origin to that OAuth client.
 
-## 📋 Features
+## Main files
 
-- ✅ Student search by full roll number
-- ✅ Google OAuth admin login (only navyachinta31545@gmail.com)
-- ✅ Manual save to localStorage
-- ✅ Shuffle saves latest version
-- ✅ No Firebase backend needed
-- ✅ Bench number in seating details
+- `index.html` — home page and student roll-number search
+- `admin.html` — admin dashboard
+- `edit-data.js` — roster upload and editing
+- `app-multiyear.js` — multi-year seating generation
+- `results.html` and `results.js` — saved seating results and exports
+- `student.html` and `student.js` — student seat lookup results
 
-## 🔒 Admin Access
+## Tech stack
 
-Only **navyachinta31545@gmail.com** can access the admin panel.
-
-## 📱 Usage
-
-### For Students:
-1. Go to home page
-2. Enter full roll number (e.g., 25wh1a0501)
-3. Click Search
-4. View seat details with bench number
-
-### For Admin:
-1. Click "Sign in with Google"
-2. Login with authorized email
-3. Generate seating arrangement
-4. Click "Save Data" to make it available to students
-5. Use "Shuffle" to randomize (auto-saves)
-
-## 🛠️ Tech Stack
-
-- Pure HTML/CSS/JavaScript
-- Google OAuth (no backend)
-- localStorage for data persistence
-- Vercel for hosting
+- HTML, CSS, and vanilla JavaScript
+- Google Identity Services
+- Firebase Firestore
+- Vercel
