@@ -93,24 +93,8 @@ async function initEditView() {
         if (file) processEditFile(file);
     });
 
-    try {
-        const snapshot = await db.collection('studentSections').get();
-        const records = snapshot.docs.map(doc => doc.data());
-        if (records.length) {
-            editParsedData = sortEditStudentRecords(records.flatMap(record => (record.students || []).map((student, index) => ({
-                sno: index + 1,
-                rollNo: student.rollNo,
-                name: student.name || '',
-                year: record.year,
-                branch: record.branch,
-                section: record.section
-            }))));
-            setEditStatus(`Loaded ${editParsedData.length} saved student records. Select a year to edit.`, 'green');
-            renderYearSelection();
-        }
-    } catch (error) {
-        setEditStatus(`Could not load saved records: ${error.message}`, 'red');
-    }
+    editParsedData = [];
+    setEditStatus('Upload a workbook to display its years and student totals.', '#6b7280');
 }
 
 // ─── Inject CSS (only once) ───────────────────────────────────────────────────
