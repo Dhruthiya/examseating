@@ -42,7 +42,7 @@ async function initEditView() {
             <div id="editFileStatus" style="margin-top:14px;font-size:13px;color:#6b7280;"></div>
             <button id="saveAllStudentDataButton" type="button" class="sidebar-btn"
                     style="display:none;margin-top:16px;background:#15803d;color:white;"
-                    onclick="saveAllEditDataToSystem()">💾 Save All and Replace Student Data</button>
+                    onclick="saveAllEditDataToSystem()">💾 Save All and Use Workbook</button>
             <button id="generateFromUploadButton" type="button" class="sidebar-btn"
                     style="display:none;margin-top:10px;background:#4a90e2;color:white;"
                     onclick="saveRosterAndOpenGenerator()">🎓 Generate Table</button>
@@ -798,7 +798,7 @@ async function saveAllEditDataToSystem() {
         updatedAt: new Date().toISOString()
     }));
     const studentCount = records.reduce((total, record) => total + record.students.length, 0);
-    if (!confirm(`Save ${studentCount} uploaded students across ${records.length} sections as the seating roster? Once saved, sections missing from this upload will not use built-in roll numbers.`)) {
+    if (!confirm(`Use the entire uploaded workbook as the seating roster: ${studentCount} students across ${records.length} sections? Saved sections absent from this workbook will be removed, and seating will use only this workbook.`)) {
         return false;
     }
 
