@@ -61,11 +61,12 @@
                         <div class="form-group" id="yearSelectionSection" style="display: none;">
                             <label>📅 Select Years (can select multiple):</label>
                             <div class="branch-count-buttons">
-                                <button type="button" class="count-btn year-btn" onclick="toggleYear('1st Year')">1st Year</button>
-                                <button type="button" class="count-btn year-btn" onclick="toggleYear('2nd Year')">2nd Year</button>
-                                <button type="button" class="count-btn year-btn" onclick="toggleYear('3rd Year')">3rd Year</button>
-                                <button type="button" class="count-btn year-btn" onclick="toggleYear('4th Year')">4th Year</button>
+                                <button type="button" class="count-btn year-btn" data-year="1st Year" onclick="toggleYear('1st Year')">1st Year</button>
+                                <button type="button" class="count-btn year-btn" data-year="2nd Year" onclick="toggleYear('2nd Year')">2nd Year</button>
+                                <button type="button" class="count-btn year-btn" data-year="3rd Year" onclick="toggleYear('3rd Year')">3rd Year</button>
+                                <button type="button" class="count-btn year-btn" data-year="4th Year" onclick="toggleYear('4th Year')">4th Year</button>
                             </div>
+                            <p id="yearRosterHint" style="margin:8px 0 0;color:#6b7280;font-size:13px;"></p>
                         </div>
                         
                         <div id="yearDetailsContainer"></div>
@@ -108,12 +109,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config-simple.js"></script>
-    <script src="rollnumbers.js?v=uploaded-roster-source-v2-20260926"></script>
+    <script src="rollnumbers.js?v=uploaded-roster-year-count-20260926"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="app-multiyear.js?v=uploaded-roster-source-v2-20260926"></script>
-    <script src="edit-data.js?v=uploaded-roster-source-v2-20260926"></script>
+    <script src="app-multiyear.js?v=uploaded-roster-year-count-20260926"></script>
+    <script src="edit-data.js?v=uploaded-roster-year-count-20260926"></script>
     <script>
         if (!sessionStorage.getItem('isLoggedIn') || sessionStorage.getItem('userRole') !== 'admin') {
             window.location.href = 'index.html';
@@ -126,6 +127,7 @@
         
         async function showGenerateForm() {
             await window.studentDatabaseReady;
+            updateYearAvailabilityButtons();
             document.getElementById('startView').style.display = 'none';
             document.getElementById('generateFormView').style.display = 'block';
             document.getElementById('allTablesView').style.display = 'none';

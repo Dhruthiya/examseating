@@ -120,6 +120,34 @@ function getRollNumbersForYearSection(year, sectionName) {
     return matchingKey && Array.isArray(ROLL_NUMBERS[matchingKey]) ? ROLL_NUMBERS[matchingKey] : [];
 }
 
+function getStudentCountForYear(year) {
+    return Object.values(branchData).reduce((total, branch) =>
+        total + branch.sections.reduce((branchTotal, sectionName) =>
+            branchTotal + getRollNumbersForYearSection(year, sectionName).length, 0
+        ), 0
+    );
+}
+
+function updateYearAvailabilityButtons() {
+    const availableYears = [];
+    document.querySelectorAll('.year-btn[data-year]').forEach(button => {
+        const year = button.dataset.year;
+        const count = getStudentCountForYear(year);
+        button.textContent = `${year} (${count} students)`;
+        button.disabled = count === 0;
+        button.style.opacity = count === 0 ? '0.45' : '1';
+        button.style.cursor = count === 0 ? 'not-allowed' : 'pointer';
+        button.title = count === 0 ? 'No saved students for this year' : `${count} saved students`;
+        if (count > 0) availableYears.push(`${year}: ${count}`);
+    });
+    const hint = document.getElementById('yearRosterHint');
+    if (hint) {
+        hint.textContent = availableYears.length
+            ? `Roster data available — ${availableYears.join(' · ')}`
+            : 'No student roster is currently available.';
+    }
+}
+
 function getYearSuffix(year) {
     if (year.startsWith('1st')) return '1';
     if (year.startsWith('2nd')) return '2';
@@ -143,6 +171,7 @@ function selectSemester(semester) {
 }
 
 function toggleYear(year) {
+    if (getStudentCountForYear(year) === 0) return;
     const btn = event.target;
     const blockId = `year-block-${year.replace(/\s/g, '-')}`;
 
