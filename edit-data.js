@@ -828,7 +828,6 @@ async function saveAllEditDataToSystem() {
         applyStudentSectionRecords(records);
         setSaveAllButtonVisible(false);
         setEditStatus(`✅ Saved ${studentCount} uploaded students across ${records.length} sections. Seating will use only this uploaded roster.`, 'green');
-        alert('✅ Uploaded roster saved. Seating generation will use only this uploaded roster.');
         return true;
     } catch (error) {
         setEditStatus(`Could not replace the student database: ${error.message}`, 'red');
