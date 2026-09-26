@@ -1,6 +1,7 @@
 let selectedSemester = '';
 let selectedYears = new Set();
 let yearData = {}; // {year: {mid: '', branches: Set(), subjects: {}}}
+let uploadedRosterRecords = [];
 let occupiedRoomsForSelectedSlot = new Set();
 let roomRequirementContext = { totalStudents: 0, roomsRequired: 0 };
 window.isSavingData = false;
@@ -68,6 +69,7 @@ function applyStudentSectionRecords(records) {
 async function loadStudentDatabaseOverrides() {
     const snapshot = await db.collection('studentSections').get();
     const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    uploadedRosterRecords = records;
     applyStudentSectionRecords(records);
     return records;
 }
@@ -82,6 +84,20 @@ function toLocalISODate(date = new Date()) {
 function getRollNumbersForYearSection(year, sectionName) {
     const normalizedSection = sectionName.replace('-', ' ');
     const fullSectionName = `${year} ${normalizedSection}`;
+
+    // Once an uploaded roster exists, use it as the only source. Do not fill
+    // missing uploaded sections with stale built-in roll numbers.
+    if (uploadedRosterRecords.length > 0) {
+        const compactKey = value => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const wantedKey = compactKey(fullSectionName);
+        const record = uploadedRosterRecords.find(item =>
+            compactKey(`${item.year} ${item.branch} ${item.section}`) === wantedKey
+        );
+        return record && Array.isArray(record.students)
+            ? record.students.map(student => String(student.rollNo || '').trim().toLowerCase()).filter(Boolean)
+            : [];
+    }
+
     if (Array.isArray(ROLL_NUMBERS[fullSectionName])) {
         return ROLL_NUMBERS[fullSectionName];
     }
@@ -397,7 +413,6 @@ async function loadTablesSidebar(selectedTableId = null) {
 
 async function calculateRoomRequirements() {
     const savedRecords = await loadStudentDatabaseOverrides();
-    let totalStudents = 0;
     const requestedSections = [];
 
     selectedYears.forEach(year => {
@@ -410,25 +425,17 @@ async function calculateRoomRequirements() {
         });
     });
 
-    const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    requestedSections.forEach(request => {
-        const savedRecord = savedRecords.find(record =>
-            normalize(record.year) === normalize(request.year) &&
-            normalize(record.branch) === normalize(request.branch) &&
-            normalize(record.section) === normalize(request.section)
-        );
-        const rollNumbers = savedRecord
-            ? (savedRecord.students || []).map(student => String(student.rollNo || '').trim()).filter(Boolean)
-            : getRollNumbersForYearSection(request.year, `${request.branch}-${request.section}`);
-        totalStudents += rollNumbers.length;
-    });
+    const { allStudents } = buildStudentAndSectionData();
+    const totalStudents = allStudents.length;
+    const requiredBenches = allocateStudentsToBenches(allStudents).length;
     const escapeRosterLabel = value => String(value ?? '').replace(/[&<>"']/g, character => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     })[character]);
 
     roomRequirementContext = {
         totalStudents,
-        roomsRequired: Math.ceil(totalStudents / 56)
+        requiredBenches,
+        roomsRequired: Math.ceil(requiredBenches / 28)
     };
 
     const availableRoomCount = getAllAvailableRooms().filter(room => !occupiedRoomsForSelectedSlot.has(room)).length;
@@ -450,7 +457,7 @@ async function calculateRoomRequirements() {
                 <button onclick="startManualAssign(${roomRequirementContext.roomsRequired})" style="flex: 1; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
                     ✋ Manual Assign
                 </button>
-            </div>` : `<p style="margin-top:20px;"><strong>No students found for this selection.</strong> Selected: ${Array.from(selectedYears).map(escapeRosterLabel).join(', ')} — ${Array.from(new Set(requestedSections.map(section => section.branch))).map(escapeRosterLabel).join(', ')}.</p><p>Available roster sections: ${Object.entries(ROLL_NUMBERS).filter(([key, rolls]) => Array.isArray(rolls) && rolls.length).map(([key, rolls]) => `${escapeRosterLabel(key)} (${rolls.length})`).join(', ') || 'none'}.</p>`}
+            </div>` : `<p style="margin-top:20px;"><strong>No students found for this selection.</strong> Selected: ${Array.from(selectedYears).map(escapeRosterLabel).join(', ')} — ${Array.from(new Set(requestedSections.map(section => section.branch))).map(escapeRosterLabel).join(', ')}.</p><p>Roster source: ${uploadedRosterRecords.length ? 'uploaded data only' : 'built-in data (no uploaded roster saved)'}. Available sections: ${uploadedRosterRecords.length ? savedRecords.map(record => `${escapeRosterLabel(record.year)} ${escapeRosterLabel(record.branch)}-${escapeRosterLabel(record.section)} (${(record.students || []).length})`).join(', ') : Object.entries(ROLL_NUMBERS).filter(([key, rolls]) => Array.isArray(rolls) && rolls.length).map(([key, rolls]) => `${escapeRosterLabel(key)} (${rolls.length})`).join(', ') || 'none'}.</p>`}
         </div>
     `;
 
@@ -492,31 +499,38 @@ async function startAutoAssign(roomsRequired) {
     await refreshOccupiedRoomsForSelectedSlot();
     selectedRooms.clear();
     const preferredSectionRooms = [];
+    const populatedSections = new Set(buildStudentAndSectionData().allSections.map(section =>
+        `${section.year}|${section.name}`
+    ));
 
     selectedYears.forEach(year => {
         const data = yearData[year];
         data.branches.forEach(branch => {
             branchData[branch].sections.forEach(sectionName => {
-                preferredSectionRooms.push(getPhysicalSectionRoomName(year, sectionName));
+                if (populatedSections.has(`${year}|${sectionName}`)) {
+                    preferredSectionRooms.push(getPhysicalSectionRoomName(year, sectionName));
+                }
             });
         });
     });
 
-    const freePreferredRooms = preferredSectionRooms.filter(room => !occupiedRoomsForSelectedSlot.has(room));
+    const freePreferredRooms = [...new Set(preferredSectionRooms)]
+        .filter(room => !occupiedRoomsForSelectedSlot.has(room))
+        .slice(0, roomsRequired);
     const occupiedPreferredRooms = preferredSectionRooms.filter(room => occupiedRoomsForSelectedSlot.has(room));
 
     freePreferredRooms.forEach(room => selectedRooms.add(room));
 
-    const sectionRoomCapacity = selectedRooms.size * 56;
-    const additionalStudents = Math.max(0, roomRequirementContext.totalStudents - sectionRoomCapacity);
-    const additionalRoomsNeeded = Math.ceil(additionalStudents / 56);
+    const sectionRoomCapacity = selectedRooms.size * 28;
+    const remainingBenches = Math.max(0, roomRequirementContext.requiredBenches - sectionRoomCapacity);
+    const additionalRoomsNeeded = Math.max(0, roomsRequired - selectedRooms.size);
 
     const container = document.getElementById('roomSelectionDisplay');
     container.innerHTML = `
         <h4 style="margin-top: 20px; color: #4caf50;">✨ Auto Assign - Section Rooms:</h4>
         <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 10px 0;">
             <p style="margin: 5px 0;"><strong>🏫 Section Rooms Auto-Allocated:</strong> ${selectedRooms.size} room(s)</p>
-            <p style="margin: 5px 0;"><strong>👥 Capacity:</strong> ${sectionRoomCapacity} students</p>
+            <p style="margin: 5px 0;"><strong>🪑 Bench capacity:</strong> ${sectionRoomCapacity} benches</p>
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
                 ${Array.from(selectedRooms).map(room => `<span style="padding: 5px 10px; background: white; border-radius: 4px; border: 2px solid #4caf50;">${room}</span>`).join('')}
             </div>
@@ -539,7 +553,7 @@ async function startAutoAssign(roomsRequired) {
         container.innerHTML += `
             <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0; border: 2px solid #ffc107;">
                 <p style="margin: 5px 0; color: #856404;"><strong>⚠️ Additional Rooms Needed:</strong> ${additionalRoomsNeeded} room(s)</p>
-                <p style="margin: 5px 0; color: #856404;"><strong>👥 Remaining Students:</strong> ${additionalStudents} students</p>
+                <p style="margin: 5px 0; color: #856404;"><strong>🪑 Remaining benches:</strong> ${remainingBenches}</p>
                 <p style="margin: 5px 0; color: #856404;"><strong>Available Extra Rooms:</strong> ${extraFreeRooms.length}</p>
                 <button onclick="selectAdditionalRooms(${additionalRoomsNeeded})" style="width: 100%; padding: 12px; background: #ff9800; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 10px;">
                     📍 Select ${additionalRoomsNeeded} Additional Room(s)
@@ -812,59 +826,28 @@ function generateMultiYearArrangement() {
     window.location.href = 'results.html';
 }
 
-function allocateSeatsToClassrooms(students) {
-    const BENCHES_PER_CLASSROOM = 28;
-    const studentsBySubject = {};
+function allocateStudentsToBenches(students) {
+    const remaining = [...students];
+    const benches = [];
+    const normalize = value => String(value || '').trim().toLowerCase();
 
-    students.forEach(student => {
-        if (!studentsBySubject[student.subject]) {
-            studentsBySubject[student.subject] = [];
-        }
-        studentsBySubject[student.subject].push(student);
-    });
-
-    const subjects = Object.keys(studentsBySubject);
-    const seatedRollNumbers = new Set();
-    const allBenches = [];
-
-    for (let i = 0; i < subjects.length; i++) {
-        for (let j = i + 1; j < subjects.length; j++) {
-            const subject1 = subjects[i];
-            const subject2 = subjects[j];
-            const list1 = studentsBySubject[subject1];
-            const list2 = studentsBySubject[subject2];
-
-            while (list1.length > 0 && list2.length > 0) {
-                const student1 = list1.shift();
-                const student2 = list2.shift();
-
-                if (student1.section === student2.section) {
-                    list2.unshift(student2);
-                    if (list2.length === 1) {
-                        break;
-                    }
-                    continue;
-                }
-
-                allBenches.push({
-                    seat1: student1,
-                    seat2: student2
-                });
-                seatedRollNumbers.add(student1.rollNo);
-                seatedRollNumbers.add(student2.rollNo);
-            }
-        }
+    while (remaining.length) {
+        const student = remaining.shift();
+        const partnerIndex = remaining.findIndex(candidate =>
+            normalize(candidate.branch) !== normalize(student.branch) &&
+            normalize(candidate.subject) !== normalize(student.subject) &&
+            normalize(candidate.section) !== normalize(student.section)
+        );
+        const partner = partnerIndex >= 0 ? remaining.splice(partnerIndex, 1)[0] : null;
+        benches.push({ seat1: student, seat2: partner });
     }
 
-    students.forEach(student => {
-        if (!seatedRollNumbers.has(student.rollNo)) {
-            allBenches.push({
-                seat1: student,
-                seat2: null
-            });
-            seatedRollNumbers.add(student.rollNo);
-        }
-    });
+    return benches;
+}
+
+function allocateSeatsToClassrooms(students) {
+    const BENCHES_PER_CLASSROOM = 28;
+    const allBenches = allocateStudentsToBenches(students);
 
     const actualRoomsNeeded = Math.ceil(allBenches.length / BENCHES_PER_CLASSROOM);
     const rooms = Array.from(selectedRooms);

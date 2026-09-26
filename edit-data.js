@@ -26,7 +26,7 @@ async function initEditView() {
     container.innerHTML = `
         <h1 style="margin-bottom:6px;">✏️ Edit Student Data</h1>
         <p style="color:#6b7280;margin-bottom:28px;font-size:14px;">
-            Upload an Excel or CSV file, then edit student names or hall-ticket numbers before saving.
+            Upload an Excel or CSV file, then edit student names or hall-ticket numbers before saving. Once saved, seating uses the uploaded roster only.
         </p>
 
         <!-- Upload Card -->
@@ -741,6 +741,9 @@ async function saveEditDataToRollNumbers() {
         };
         try {
             await db.collection('studentSections').doc(encodeURIComponent(key)).set(record);
+            uploadedRosterRecords = uploadedRosterRecords.filter(item => item.key !== key &&
+                `${item.year} ${item.branch} ${item.section}` !== key
+            ).concat(record);
             ROLL_NUMBERS[key] = students.map(student => student.rollNo);
             alert(`✅ Saved ${students.length} student records under "${key}". They are available for seating generation.`);
         } catch (error) {
@@ -795,7 +798,7 @@ async function saveAllEditDataToSystem() {
         updatedAt: new Date().toISOString()
     }));
     const studentCount = records.reduce((total, record) => total + record.students.length, 0);
-    if (!confirm(`Replace the uploaded student roster with ${studentCount} students across ${records.length} sections? Other available built-in roll number sections will remain available.`)) {
+    if (!confirm(`Save ${studentCount} uploaded students across ${records.length} sections as the seating roster? Once saved, sections missing from this upload will not use built-in roll numbers.`)) {
         return false;
     }
 
@@ -827,10 +830,11 @@ async function saveAllEditDataToSystem() {
             await batch.commit();
         }
 
+        uploadedRosterRecords = records;
         applyStudentSectionRecords(records);
         setSaveAllButtonVisible(false);
-        setEditStatus(`✅ Saved ${studentCount} uploaded students across ${records.length} sections. Built-in roll number sections remain available.`, 'green');
-        alert('✅ Uploaded roster saved. Seating generation will use it for matching sections and retain the built-in rosters for other sections.');
+        setEditStatus(`✅ Saved ${studentCount} uploaded students across ${records.length} sections. Seating will use only this uploaded roster.`, 'green');
+        alert('✅ Uploaded roster saved. Seating generation will use only this uploaded roster.');
         return true;
     } catch (error) {
         setEditStatus(`Could not replace the student database: ${error.message}`, 'red');
