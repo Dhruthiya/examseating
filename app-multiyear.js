@@ -411,13 +411,16 @@ async function calculateRoomRequirements() {
     });
 
     const normalize = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const selectedRosterSections = savedRecords.filter(record => requestedSections.some(request =>
-        normalize(record.year) === normalize(request.year) &&
-        normalize(record.branch) === normalize(request.branch) &&
-        normalize(record.section) === normalize(request.section)
-    ));
-    selectedRosterSections.forEach(record => {
-        totalStudents += (record.students || []).filter(student => String(student.rollNo || '').trim()).length;
+    requestedSections.forEach(request => {
+        const savedRecord = savedRecords.find(record =>
+            normalize(record.year) === normalize(request.year) &&
+            normalize(record.branch) === normalize(request.branch) &&
+            normalize(record.section) === normalize(request.section)
+        );
+        const rollNumbers = savedRecord
+            ? (savedRecord.students || []).map(student => String(student.rollNo || '').trim()).filter(Boolean)
+            : getRollNumbersForYearSection(request.year, `${request.branch}-${request.section}`);
+        totalStudents += rollNumbers.length;
     });
     const escapeRosterLabel = value => String(value ?? '').replace(/[&<>"']/g, character => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -447,7 +450,7 @@ async function calculateRoomRequirements() {
                 <button onclick="startManualAssign(${roomRequirementContext.roomsRequired})" style="flex: 1; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
                     ✋ Manual Assign
                 </button>
-            </div>` : `<p style="margin-top:20px;"><strong>No saved students for this selection.</strong> Selected: ${Array.from(selectedYears).map(escapeRosterLabel).join(', ')} — ${Array.from(new Set(requestedSections.map(section => section.branch))).map(escapeRosterLabel).join(', ')}.</p><p>Saved sections in the database: ${savedRecords.length ? savedRecords.map(record => `${escapeRosterLabel(record.year)} ${escapeRosterLabel(record.branch)}-${escapeRosterLabel(record.section)} (${(record.students || []).length})`).join(', ') : 'none'}.</p>`}
+            </div>` : `<p style="margin-top:20px;"><strong>No students found for this selection.</strong> Selected: ${Array.from(selectedYears).map(escapeRosterLabel).join(', ')} — ${Array.from(new Set(requestedSections.map(section => section.branch))).map(escapeRosterLabel).join(', ')}.</p><p>Available roster sections: ${Object.entries(ROLL_NUMBERS).filter(([key, rolls]) => Array.isArray(rolls) && rolls.length).map(([key, rolls]) => `${escapeRosterLabel(key)} (${rolls.length})`).join(', ') || 'none'}.</p>`}
         </div>
     `;
 

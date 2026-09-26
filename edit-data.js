@@ -795,7 +795,7 @@ async function saveAllEditDataToSystem() {
         updatedAt: new Date().toISOString()
     }));
     const studentCount = records.reduce((total, record) => total + record.students.length, 0);
-    if (!confirm(`Replace the saved student database with ${studentCount} students across ${records.length} sections? Saved sections missing from this upload will be removed.`)) {
+    if (!confirm(`Replace the uploaded student roster with ${studentCount} students across ${records.length} sections? Other available built-in roll number sections will remain available.`)) {
         return false;
     }
 
@@ -827,11 +827,10 @@ async function saveAllEditDataToSystem() {
             await batch.commit();
         }
 
-        Object.keys(ROLL_NUMBERS).forEach(key => delete ROLL_NUMBERS[key]);
         applyStudentSectionRecords(records);
         setSaveAllButtonVisible(false);
-        setEditStatus(`✅ Replaced the student database with ${studentCount} students across ${records.length} sections.`, 'green');
-        alert('✅ Student database replaced. Seating generation will now use this uploaded roster.');
+        setEditStatus(`✅ Saved ${studentCount} uploaded students across ${records.length} sections. Built-in roll number sections remain available.`, 'green');
+        alert('✅ Uploaded roster saved. Seating generation will use it for matching sections and retain the built-in rosters for other sections.');
         return true;
     } catch (error) {
         setEditStatus(`Could not replace the student database: ${error.message}`, 'red');
