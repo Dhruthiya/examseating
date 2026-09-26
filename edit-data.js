@@ -76,6 +76,16 @@ async function initEditView() {
                         onclick="saveEditDataToRollNumbers()">💾 Save Changes</button>
             </div>
             <div id="editTableWrapper" style="overflow-x:auto;"></div>
+            <div style="position:relative;display:inline-block;margin-top:14px;">
+                <button type="button" class="sidebar-btn" style="margin:0;background:#4a5568;color:white;"
+                        aria-expanded="false" aria-controls="appendDataMenu" onclick="toggleAppendDataMenu(this)">
+                    Appending Data ▾
+                </button>
+                <div id="appendDataMenu" style="display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:5;min-width:180px;padding:6px;background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.12);">
+                    <button type="button" class="append-data-menu-item" onclick="addRollNumberToSection()">Add</button>
+                    <button type="button" class="append-data-menu-item" onclick="deleteRollNumberFromSection()">Delete</button>
+                </div>
+            </div>
         </div>
     `;
 
@@ -154,6 +164,18 @@ function injectEditStyles() {
             border: 0; border-radius: 5px; padding: 6px 11px; cursor: pointer;
             background: #2563eb; color: white; font-size: 13px;
         }
+        .append-data-menu-item {
+            display:block;
+            width:100%;
+            padding:9px 12px;
+            border:0;
+            border-radius:5px;
+            background:white;
+            color:#374151;
+            text-align:left;
+            cursor:pointer;
+        }
+        .append-data-menu-item:hover { background:#f3f4f6; }
         .cancel-row-button { background: #6b7280; margin-left: 5px; }
         .student-edit-input { width: 100%; box-sizing: border-box; padding: 7px; border: 1px solid #cbd5e1; border-radius: 5px; }
     `;
@@ -548,6 +570,7 @@ function renderBranchSelection(year) {
         const sectionCount = [...new Set(yearData.filter(s => s.branch === branch).map(s => s.section))].length;
         const btn = document.createElement('button');
         btn.className = 'edit-branch-btn';
+        btn.dataset.branch = branch;
         btn.textContent = `${branch} (${sectionCount} section${sectionCount !== 1 ? 's' : ''}, ${count} students)`;
         btn.onclick = () => {
             document.querySelectorAll('.edit-branch-btn').forEach(b => b.classList.remove('active'));
@@ -578,6 +601,7 @@ function renderSectionSelection(year, branch) {
         const count = branchData.filter(s => s.section === section).length;
         const btn = document.createElement('button');
         btn.className = 'edit-section-btn';
+        btn.dataset.section = section;
         btn.textContent = `Section ${section} (${count})`;
         btn.onclick = () => {
             document.querySelectorAll('.edit-section-btn').forEach(b => b.classList.remove('active'));
@@ -644,6 +668,69 @@ function renderRollTable(year, branch, section) {
     document.getElementById('tableCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function toggleAppendDataMenu(button) {
+    const menu = document.getElementById('appendDataMenu');
+    if (!menu) return;
+    const willOpen = menu.style.display === 'none';
+    menu.style.display = willOpen ? 'block' : 'none';
+    button.setAttribute('aria-expanded', String(willOpen));
+}
+
+function refreshCurrentEditSection(year, branch, section) {
+    const branchStudents = editParsedData.filter(student => student.year === year && student.branch === branch);
+    const branchButton = [...document.querySelectorAll('.edit-branch-btn')]
+        .find(button => button.dataset.branch === branch);
+    if (branchButton) {
+        const sectionCount = new Set(branchStudents.map(student => student.section)).size;
+        branchButton.textContent = `${branch} (${sectionCount} section${sectionCount !== 1 ? 's' : ''}, ${branchStudents.length} students)`;
+    }
+    renderSectionSelection(year, branch);
+    renderRollTable(year, branch, section);
+}
+
+function addRollNumberToSection() {
+    const card = document.getElementById('tableCard');
+    const { year, branch, section } = card.dataset;
+    if (!year || !branch || !section) return;
+
+    const rollNo = (prompt(`Enter the roll number to add to ${year} ${branch} Section ${section}:`) || '')
+        .trim().toLowerCase();
+    if (!rollNo) return;
+
+    const duplicate = editParsedData.some(student => student.year === year && student.branch === branch &&
+        student.section === section && String(student.rollNo).trim().toLowerCase() === rollNo);
+    if (duplicate) {
+        alert('That roll number is already in this section.');
+        return;
+    }
+
+    editParsedData.push({ sno: editParsedData.length + 1, rollNo, name: '—', year, branch, section });
+    editParsedData = sortEditStudentRecords(editParsedData);
+    setEditStatus(`Added ${rollNo} to ${year} ${branch} Section ${section}. Click Save Changes to save this section.`, 'green');
+    refreshCurrentEditSection(year, branch, section);
+}
+
+function deleteRollNumberFromSection() {
+    const card = document.getElementById('tableCard');
+    const { year, branch, section } = card.dataset;
+    if (!year || !branch || !section) return;
+
+    const rollNo = (prompt(`Enter the roll number to delete from ${year} ${branch} Section ${section}:`) || '')
+        .trim().toLowerCase();
+    if (!rollNo) return;
+
+    const index = editParsedData.findIndex(student => student.year === year && student.branch === branch &&
+        student.section === section && String(student.rollNo).trim().toLowerCase() === rollNo);
+    if (index === -1) {
+        alert('That roll number was not found in this section.');
+        return;
+    }
+
+    editParsedData.splice(index, 1);
+    setEditStatus(`Deleted ${rollNo} from ${year} ${branch} Section ${section}. Click Save Changes to save this section.`, 'green');
+    refreshCurrentEditSection(year, branch, section);
+}
+
 function escapeEditHTML(value) {
     return String(value ?? '').replace(/[&<>"']/g, character => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -703,11 +790,6 @@ async function saveEditDataToRollNumbers() {
     const students = sortEditStudentRecords(editParsedData
         .filter(s => s.year === year && s.branch === branch && s.section === section)
     ).map(s => ({ rollNo: String(s.rollNo).trim().toLowerCase(), name: String(s.name || '').trim() }));
-
-    if (!students.length) {
-        alert('There are no student records in this section to save.');
-        return;
-    }
 
     if (typeof ROLL_NUMBERS !== 'undefined') {
         const record = {
