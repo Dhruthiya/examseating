@@ -1,3 +1,4 @@
+
 # Seat Snap — Exam Seating Arrangement System
 
 Seat Snap helps administrators prepare exam seating arrangements from student rosters. Students can find their assigned seat by entering their roll number; they do not need to sign in.
@@ -6,8 +7,7 @@ Seat Snap helps administrators prepare exam seating arrangements from student ro
 
 - Search for a seat using a full roll number
 - Upload student rosters as CSV or Excel files
-- Review and edit student records by year, branch, and section
-- Generate seating arrangements for selected years, branches, and rooms
+- Review and edit student records by year, branch, and section- Generate seating arrangements for selected years, branches, and rooms
 - Fit up to eight leftover students into an extra row when room capacity allows
 - Save and manage student rosters and exam tables in Firebase Firestore
 - View seating results and export them as PDF or Excel
@@ -88,3 +88,5 @@ For a different deployment, replace the Firebase web configuration in `firebase-
 - Google Identity Services
 - Firebase Firestore
 - Vercel
+
+
